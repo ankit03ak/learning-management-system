@@ -8,6 +8,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 export const AuthContext = createContext(null);
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isValidEmail = (email) => emailRegex.test(email);
+
 export default function AuthProvider({ children }) {
   
   const [signInFormData, setSignInFormData] = useState(initalSignInFormData);
@@ -16,56 +20,90 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const handleRegisterUser = async (event) => {
-    event.preventDefault();
-    try {
-      const data = await registerService(signUpFormData);
-      if (data.success) {
-        toast.success(
-          "Registration successful!"
-        );
-        setAuth({
-          authenticated: true,
-          user: data.user,
-        });
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      console.log("Error in registering user", error);
-      toast.error(error?.response?.data?.message);
-    } finally {
-      setSignUpFormData(initalSignUpFormData);
+  event.preventDefault();
+
+  const { userName, userEmail, userPassword, role } = signUpFormData;
+
+  if (!userName || !userEmail || !userPassword || !role) {
+    toast.error("All fields are required");
+    return;
+  }
+
+  if (!isValidEmail(userEmail)) {
+    toast.error("Please enter a valid email address");
+    return;
+  }
+
+  if (userPassword.length < 6) {
+    toast.error("Password must be at least 6 characters");
+    return;
+  }
+
+  try {
+    const data = await registerService(signUpFormData);
+
+    if (data.success) {
+      toast.success("Registration successful!", { autoClose: 800 });
+      setAuth({
+        authenticated: true,
+        user: data.user,
+      });
+    } else {
+      toast.error(data.message);
     }
-  };
+  } catch (error) {
+    console.log("Error in registering user", error);
+    toast.error(error?.response?.data?.message || "Registration failed");
+  } finally {
+    setSignUpFormData(initalSignUpFormData);
+  }
+};
 
   const handleloginUser = async (event) => {
-    event.preventDefault();
-    setLoading(true)
+  event.preventDefault();
+  setLoading(true);
 
-    try {
-      const data = await loginService(signInFormData);
-      if (data.success) {
-        sessionStorage.setItem("accessToken", JSON.stringify(data.accessToken));
-        toast.success("Login successful!");
-        setAuth({
-          authenticated: true,
-          user: data.user,
-        });
-      } else {
-        toast.error("Login Failed",data.message);
-        setAuth({
-          authenticated: false,
-          user: null,
-        });
-      }
-    } catch (error) {
-      console.log("Error logging in the user", error);
-      toast.error(error?.response?.data?.message);
-    } finally {
-      setLoading(false);
-      setSignInFormData(initalSignInFormData);
+  const { userEmail, userPassword } = signInFormData;
+
+  if (!userEmail || !userPassword) {
+    toast.error("Email and password are required");
+    setLoading(false);
+    return;
+  }
+
+  if (!isValidEmail(userEmail)) {
+    toast.error("Please enter a valid email address");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const data = await loginService(signInFormData);
+    if (data.success) {
+      sessionStorage.setItem(
+        "accessToken",
+        JSON.stringify(data.accessToken)
+      );
+      toast.success("Login successful!", { autoClose: 800 });
+      setAuth({
+        authenticated: true,
+        user: data.user,
+      });
+    } else {
+      toast.error(data.message || "Login failed");
+      setAuth({
+        authenticated: false,
+        user: null,
+      });
     }
-  };
+  } catch (error) {
+    console.log("Error logging in the user", error);
+    toast.error(error?.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+    setSignInFormData(initalSignInFormData);
+  }
+};
 
 
   const checkAuthUser = async () => {

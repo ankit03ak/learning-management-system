@@ -5,6 +5,22 @@ const jwt = require("jsonwebtoken");
 const registerUser = async (req, res) => {
   const { userName, userEmail, userPassword, role } = req.body;
 
+  if (!userName || !userEmail || !userPassword || !role) {
+    return res.status(400).json({
+      success: false,
+      message: "userName, userEmail, userPassword and role are required",
+      });
+    }
+
+
+  const allowedRoles = ["student", "instructor"];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role. Allowed roles are: student, instructor",
+      });
+    }
+
   const existingUser = await User.findOne({
     $or: [{ userEmail: userEmail }, { userName: userName }],
   });
@@ -37,7 +53,7 @@ const loginUser = async (req, res) => {
   if (!user) {
     return res
       .status(400)
-      .json({ success: false, message: "Invalid user email" });
+      .json({ success: false, message: "Invalid user email or password" });
   }
 
   const password = user.userPassword;
@@ -47,7 +63,7 @@ const loginUser = async (req, res) => {
   if (!isCorrectPassword) {
     return res
       .status(400)
-      .json({ success: false, message: "Invalid password" });
+      .json({ success: false, message: "Invalid user email or password" });
   }
 
   const accessToken = jwt.sign(
@@ -59,7 +75,7 @@ const loginUser = async (req, res) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: "2h",
+      expiresIn: "24h",
     }
   );
 

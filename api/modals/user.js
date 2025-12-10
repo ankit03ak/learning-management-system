@@ -11,7 +11,11 @@ const UserSchema = new mongoose.Schema(
       unique: true,
     },
     userPassword: String,
-    role: String,
+    role:{
+      type: String,
+      enum: ["student", "instructor"],
+      required: true,
+    }
   },
   { timestamps: true }
 );

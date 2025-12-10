@@ -50,7 +50,8 @@ const AuthPage = () => {
       signUpFormData &&
       signUpFormData.userName !== "" &&
       signUpFormData.userEmail !== "" &&
-      signUpFormData.userPassword !== ""
+      signUpFormData.userPassword !== "" &&
+      signUpFormData.role !== ""
     );
   };
 
