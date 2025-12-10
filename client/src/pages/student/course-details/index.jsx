@@ -20,6 +20,7 @@ import {
 import { CheckCircle, Globe, Lock, PlayCircle } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
 
 const StudentViewCourseDetailsPage = () => {
@@ -39,12 +40,14 @@ const StudentViewCourseDetailsPage = () => {
 
   const [showFreePreviewDialog, setShowFreePreviewDialog] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState("");
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   const handleSetFreePreview = (getCurrentVideoInfo) => {
     setDisplayCurrentVideoFreePreview(getCurrentVideoInfo?.videoUrl);
   };
 
   const handleCreatePayment = async () => {
+    setPaymentSubmitting(true);
   const paymentPayload = {
     userId: auth?.user?._id,
     userName: auth?.user?.userName,
@@ -96,6 +99,7 @@ const StudentViewCourseDetailsPage = () => {
     console.error("Error creating payment:", err);
     toast.error("Something went wrong while initiating payment. Try again.");
   } finally {
+    setPaymentSubmitting(false);
     setCreatingPayment(false);
   }
 };
@@ -284,9 +288,17 @@ const StudentViewCourseDetailsPage = () => {
                   Rs {studentViewCourseDetails?.pricing}
                 </span>
               </div>
-              <Button className="w-full" onClick={() => handleCreatePayment()}>
-                Buy Now
-              </Button>
+              <Button 
+  className="w-full" 
+  disabled={paymentSubmitting} 
+  onClick={handleCreatePayment}
+>
+  {paymentSubmitting ? (
+    <ClipLoader size={18} />
+  ) : (
+    "Buy Now"
+  )}
+</Button>
             </CardContent>
           </Card>
         </aside>

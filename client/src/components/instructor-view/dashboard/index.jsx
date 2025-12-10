@@ -78,9 +78,9 @@ const InstructorDashboard = ({ listOfCourses }) => {
 
 
 
-  if (listOfCourses.length === 0) {
-    return <Skeleton />;
-  }
+  // if (listOfCourses.length === 0) {
+  //   return <Skeleton />;
+  // }
 
   return (
     <div className="space-y-8">

@@ -21,24 +21,23 @@ export default function AuthProvider({ children }) {
 
   const handleRegisterUser = async (event) => {
   event.preventDefault();
-
+  
   const { userName, userEmail, userPassword, role } = signUpFormData;
-
+  
   if (!userName || !userEmail || !userPassword || !role) {
     toast.error("All fields are required");
     return;
   }
-
+  
   if (!isValidEmail(userEmail)) {
     toast.error("Please enter a valid email address");
     return;
   }
-
+  
   if (userPassword.length < 6) {
     toast.error("Password must be at least 6 characters");
     return;
   }
-
   try {
     const data = await registerService(signUpFormData);
 
@@ -46,7 +45,7 @@ export default function AuthProvider({ children }) {
       toast.success("Registration successful!", { autoClose: 800 });
       setAuth({
         authenticated: true,
-        user: data.user,
+        user: data.user || data.newUser,
       });
     } else {
       toast.error(data.message);
