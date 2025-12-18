@@ -58,17 +58,16 @@ const AuthPage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
-      <header className="px-4 lg:px-6 h-16 flex items-center border-b border-indigo-100 bg-white/80 backdrop-blur-sm z-50 flex-shrink-0">
+      <header className="px-4 lg:px-6 h-20 flex items-center border-b border-indigo-100 bg-white/80 backdrop-blur-sm z-50 flex-shrink-0">
         <div
           onClick={handleNavigate}
-          className="flex items-center justify-center cursor-pointer group"
+          className="flex items-center justify-center cursor-pointer group "
         >
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-            <GraduationCap className="h-6 w-6 text-white" />
-          </div>
-          <span className="font-bold text-2xl ml-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            LMS Learn
-          </span>
+          <img
+                src="/logo.png"
+                alt="LMS Logo"
+                className="w-18 h-16"
+              />
         </div>
       </header>
       <div className="flex items-center justify-center flex-1 p-4 overflow-auto">
