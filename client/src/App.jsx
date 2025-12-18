@@ -91,8 +91,9 @@ function App() {
             />
           }
         >
+          <Route index element={<StudentHomePage />} />
           <Route path="/courses" element={<StudentViewCoursesPage />} />
-          <Route path="/home" element={<StudentHomePage />} />
+          <Route path="home" element={<StudentHomePage />} />
           <Route path="/payment-return" element={<PaypalPaymentReturnPage />} />
           <Route path="/student-courses" element={<StudentCoursesPage />} />
           <Route

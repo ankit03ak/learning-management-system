@@ -8,6 +8,7 @@ import { fetchInstructorCourseListService } from "@/services";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { BarChart, Book, LogOut } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const InstructorDashboardPage = () => {
@@ -67,6 +68,13 @@ const InstructorDashboardPage = () => {
       <aside className="w-64 bg-white shadow-xl hidden md:block border-r-2 border-indigo-100">
         <div className="p-6">
           <div className="mb-8 pb-6 border-b-2 border-indigo-100">
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity group mb-4 ">
+                  <img
+                    src="/logo.png"
+                    alt="LMS Logo"
+                    className="w-24 h-24 object-contain ml-14"
+                  />
+            </Link>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Instructor View
             </h2>
