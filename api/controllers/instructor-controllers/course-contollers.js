@@ -2,26 +2,14 @@ const Course = require("../../modals/course");
 
 const addNewCourse = async (req, res) => {
   try {
-    const courseData = req.body;
-    const newCourse = new Course(courseData);
-    const savedCourse = await newCourse.save();
+    const savedCourse = await Course.create(req.body);
 
-    if (!savedCourse) {
-
-      return res.status(404).json({
-        success: false,
-        message: "Error creating new course",
-      });
-    }
-
-
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       message: "New Course created successfully",
-      savedCourse,
+      course: savedCourse,
     });
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: "Error creating new course",
@@ -32,6 +20,13 @@ const addNewCourse = async (req, res) => {
 const getAllCourses = async (req, res) => {
   try {
     const { instructorId } = req.params;
+
+    if (!instructorId) {
+      return res.status(400).json({
+      success: false,
+      message: "Instructor ID is required",
+    });
+    }
 
 
     const courseList = await Course.find({ instructorId });
@@ -53,6 +48,14 @@ const getAllCourses = async (req, res) => {
 const getCourseDetailsById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course ID",
+      });
+    }
+
     const courseDetails = await Course.findById(id);
 
     if (!courseDetails) {
