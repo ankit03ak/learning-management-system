@@ -42,12 +42,19 @@ export default function AuthProvider({ children }) {
     const data = await registerService(signUpFormData);
 
     if (data.success) {
-      toast.success("Registration successful!", { autoClose: 800 });
-      setAuth({
-        authenticated: true,
-        user: data.user || data.newUser,
-      });
-    } else {
+  localStorage.setItem("accessToken", data.accessToken);
+  localStorage.setItem(
+    "user",
+    JSON.stringify(data.user || data.newUser)
+  );
+
+  toast.success("Registration successful!", { autoClose: 800 });
+
+  setAuth({
+    authenticated: true,
+    user: data.user || data.newUser,
+  });
+} else {
       toast.error(data.message);
     }
   } catch (error) {
@@ -79,14 +86,16 @@ export default function AuthProvider({ children }) {
   try {
     const data = await loginService(signInFormData);
     if (data.success) {
-      sessionStorage.setItem(
-        "accessToken",
-        JSON.stringify(data.accessToken)
-      );
+      // sessionStorage.setItem(
+      //   "accessToken",
+      //   JSON.stringify(data.accessToken)
+      // );
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("user", JSON.stringify(data.user || data.newUser));
       toast.success("Login successful!", { autoClose: 800 });
       setAuth({
         authenticated: true,
-        user: data.user,
+        user: data.user || data.newUser,
       });
     } else {
       toast.error(data.message || "Login failed");
@@ -138,16 +147,26 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    checkAuthUser();
-  }, []);
+useEffect(() => {
+  const token = localStorage.getItem("accessToken");
+  const user = localStorage.getItem("user");
 
-  const resetCredentials = () => {
+  if (token && user) {
     setAuth({
-      authenticated: false,
-      user: null,
+      authenticated: true,
+      user: JSON.parse(user),
     });
-  };
+    setLoading(false);
+  } else {
+    checkAuthUser();
+  }
+}, []);
+
+const resetCredentials = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("user");
+  setAuth({ authenticated: false, user: null });
+};
 
 
   return (
