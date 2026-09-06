@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Slider } from "../ui/slider";
 import { Button } from "../ui/button";
+import PropTypes from "prop-types";
 import {
   Maximize,
   Minimize,
@@ -12,9 +13,15 @@ import {
   Play,
   RotateCw,
 } from "lucide-react";
-import { progress } from "framer-motion";
 
-const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate,  onProgressUpdate, progressData }) => {
+const VideoPlayer = ({
+  width = "100%",
+  height = "100%",
+  url,
+  useProgressUpdate,
+  onProgressUpdate,
+  progressData,
+}) => {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
@@ -96,7 +103,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
   //This keeps track of the state "isFullScreen"
   useEffect(() => {
     const handleFullScreenChange = () => {
-      setIsFullScreen(document.fullscreenElement); //"document.fullscreenElement" gives null if no component is in Fullscreen, else gives that DOM element that is in fullscreen
+      setIsFullScreen(Boolean(document.fullscreenElement));
     };
 
     document.addEventListener("fullscreenchange", handleFullScreenChange); //"fullscreenchange" is a built-in browser event. It is fired whenever an element takes fullscreen or exits. So the "handleFullScreenChange" is called whenever an entry or exit from fullscreen occurs.
@@ -107,21 +114,40 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
   }, []);
 
   useEffect(() => {
-    if(!useProgressUpdate){
-      return
+    if (!useProgressUpdate || played < 0.95 || !onProgressUpdate) {
+      return;
     }
-   if(played === 1){
     onProgressUpdate({
       ...progressData,
-      progressValue : played  
-    })
-   }
-  }, [played])
+      progressValue: played,
+    });
+  }, [onProgressUpdate, played, progressData, useProgressUpdate]);
+
+  useEffect(
+    () => () => clearTimeout(controlsTimeoutRef.current),
+    []
+  );
 
    const handleMouseMove = () => {
     setShowControls(true);
     clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+  };
+
+  const handleKeyDown = (event) => {
+   if (event.key === " " || event.key === "Enter") {
+     event.preventDefault();
+     handlePlayAndPause();
+   } else if (event.key === "ArrowLeft") {
+     event.preventDefault();
+     handleRewind();
+   } else if (event.key === "ArrowRight") {
+     event.preventDefault();
+     handleForward();
+   } else if (event.key.toLowerCase() === "m") {
+     event.preventDefault();
+     handleToggleMute();
+   }
   };
 
   return (
@@ -130,7 +156,12 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
       className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out 
     ${isFullScreen ? `w-screen h-screen` : ``}`}
       style={{ width, height }}
+      role="region"
+      aria-label="Video player"
+      tabIndex={0}
       onMouseMove={handleMouseMove}
+      onFocus={handleMouseMove}
+      onKeyDown={handleKeyDown}
       onMouseLeave={() => setShowControls(false)} //This vanishes the controls in case pointer is moved out of the video  box 
     >
       <ReactPlayer
@@ -157,6 +188,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
             onValueChange={(value) => handleSeekChange(value[0] / 100)} //slider manages the value itself. Value is an array that has  the % of video played
             onValueCommit={handleSeekMouseUp}
             className="w-full mb-4"
+            aria-label="Seek video"
           />
           <div className="flex items-center  justify-between">
             <div className="flex items-center space-x-2">
@@ -164,6 +196,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
                 variant="ghost"
                 size="icon"
                 onClick={handlePlayAndPause}
+                aria-label={playing ? "Pause video" : "Play video"}
                 className="text-white bg-transparent hover:text-white hover:bg-gray-700"
               >
                 {playing ? (
@@ -174,6 +207,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
               </Button>
               <Button
                 onClick={handleRewind}
+                aria-label="Rewind 5 seconds"
                 variant="ghost"
                 size="icon"
                 className="text-white bg-transparent hover:text-white hover:bg-gray-700"
@@ -183,6 +217,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
 
               <Button
                 onClick={handleForward}
+                aria-label="Forward 5 seconds"
                 variant="ghost"
                 size="icon"
                 className="text-white bg-transparent hover:text-white hover:bg-gray-700"
@@ -191,6 +226,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
               </Button>
               <Button
                 onClick={handleToggleMute}
+                aria-label={muted ? "Unmute video" : "Mute video"}
                 variant="ghost"
                 size="icon"
                 className="text-white bg-transparent hover:text-white hover:bg-gray-700"
@@ -207,6 +243,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
                 step={1}
                 onValueChange={(value) => handleVolumeChange([value[0] / 100])}
                 className="w-24 bg-red-900"
+                aria-label="Volume"
               />
             </div>
             <div className="flex items-center space-x-2 ">
@@ -219,6 +256,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
                 size="icon"
                 className="text-white bg-transparent hover:text-white hover:bg-gray-700"
                 onClick={handleFullScreen}
+                aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
               >
                 {isFullScreen ? (
                   <Minimize className="h-6 w-6" />
@@ -232,6 +270,15 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
       )}
     </div>
   );
+};
+
+VideoPlayer.propTypes = {
+  width: PropTypes.string,
+  height: PropTypes.string,
+  url: PropTypes.string,
+  useProgressUpdate: PropTypes.bool,
+  onProgressUpdate: PropTypes.func,
+  progressData: PropTypes.object,
 };
 
 export default VideoPlayer;

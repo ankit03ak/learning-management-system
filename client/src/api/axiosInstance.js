@@ -1,11 +1,9 @@
 import axios from "axios";
 
-
+const configuredBaseUrl = import.meta.env.VITE_BASE_URL?.trim();
 const baseURL =
-process.env.NODE_ENV === "production"
-? import.meta.env.VITE_BASE_URL
-: "http://localhost:8080";
-
+  configuredBaseUrl ||
+  (import.meta.env.DEV ? "http://localhost:8080" : window.location.origin);
 
 const axiosInstance = axios.create({
   baseURL,
@@ -13,18 +11,20 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const acccessToken = JSON.parse(sessionStorage.getItem("accessToken"));
+    const accessToken = localStorage.getItem("accessToken");
 
-    if (acccessToken) {
-      config.headers.Authorization = `Bearer ${acccessToken}`;
+    if (accessToken) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${accessToken}`;
     } else {
       delete config.headers.Authorization;
     }
+
     return config;
   },
-  (err) => {
-    console.error("Interceptor request error:", err);
-    Promise.reject(err);
+  (error) => {
+    console.error("Interceptor request error:", error);
+    return Promise.reject(error);
   }
 );
 

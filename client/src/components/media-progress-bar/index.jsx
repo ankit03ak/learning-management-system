@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { easeInOut, motion } from "framer-motion";
+import PropTypes from "prop-types";
 
 const MediaProgressbar = ({ isMediaUploading, progress }) => {
   const [showProgress, setShowProgress] = useState(false);
@@ -46,6 +47,11 @@ const MediaProgressbar = ({ isMediaUploading, progress }) => {
       </motion.div>
     </div>
   );
+};
+
+MediaProgressbar.propTypes = {
+  isMediaUploading: PropTypes.bool,
+  progress: PropTypes.number,
 };
 
 export default MediaProgressbar;

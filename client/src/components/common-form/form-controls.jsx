@@ -1,4 +1,3 @@
-import React from "react";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
@@ -10,6 +9,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
+import PropTypes from "prop-types";
+import { toast } from "react-toastify";
 
 const FormControls = ({ formControls = [], formData, setFormData }) => {
   const renderComponentByType = (getControlItem) => {
@@ -22,7 +23,7 @@ const FormControls = ({ formControls = [], formData, setFormData }) => {
     
     let element = null;
 
-    const currentControlItemValue = formData[getControlItem.name] || "";
+    const currentControlItemValue = formData?.[getControlItem.name] || "";
 
     switch (getControlItem.componentType) {
       case "input":
@@ -126,6 +127,12 @@ const FormControls = ({ formControls = [], formData, setFormData }) => {
       ))}
     </div>
   );
+};
+
+FormControls.propTypes = {
+  formControls: PropTypes.array,
+  formData: PropTypes.object,
+  setFormData: PropTypes.func.isRequired,
 };
 
 export default FormControls;

@@ -18,9 +18,10 @@ import {
 } from "@/services";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { ArrowUpDownIcon } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { toast } from "react-toastify";
 
 //This function and its useeffect shows how to chnage the URL according to key-value pairs of an object
 const createSearchParamsHelper = (filterParams) => {
@@ -29,7 +30,7 @@ const createSearchParamsHelper = (filterParams) => {
   for (const [key, value] of Object.entries(filterParams)) {
     if (Array.isArray(value) && value.length > 0) {
       const paramValue = value.join(",");
-      queryParams.push(`${key} = ${encodeURIComponent(paramValue)}`);
+      queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
     }
   }
 
@@ -42,7 +43,7 @@ const StudentViewCoursesPage = () => {
 
   const [filters, setFilters] = useState({});
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
 
   const {
     studentViewCoursesList,
@@ -72,11 +73,16 @@ const StudentViewCoursesPage = () => {
   useEffect(() => {
     const buildQueryStringForFilters = createSearchParamsHelper(filters);
     setSearchParams(new URLSearchParams(buildQueryStringForFilters));
-  }, [filters]);
+  }, [filters, setSearchParams]);
 
   useEffect(() => {
     setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
+    try {
+      setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
+    } catch {
+      sessionStorage.removeItem("filters");
+      setFilters({});
+    }
   }, []);
 
   useEffect(() => {
@@ -106,7 +112,12 @@ const StudentViewCoursesPage = () => {
 
       fetchAllCoursesOfStudent();
     }
-  }, [filters, sort]);
+  }, [
+    filters,
+    sort,
+    setLoadingState,
+    setStudentViewCoursesList,
+  ]);
 
   useEffect(() => {
     sessionStorage.removeItem("filters");
@@ -154,7 +165,7 @@ const StudentViewCoursesPage = () => {
                 </h3>
                 <div className="grid gap-3 mt-2">
                   {filterOptions[keyItem].map((option) => (
-                    <Label 
+                    <Label
                       className="flex font-medium items-center gap-3 cursor-pointer hover:text-indigo-600 transition-colors p-0 rounded-lg hover:bg-indigo-50" 
                       key={option?._id}
                     >
@@ -215,15 +226,19 @@ const StudentViewCoursesPage = () => {
           <div className="space-y-6">
             {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
               studentViewCoursesList.map((courseItem) => (
-                <Card
-                  onClick={() => handleCourseNavigate(courseItem?._id)}
-                  key={courseItem?._id}
-                  className="cursor-pointer group hover:shadow-xl transition-all duration-300 border-1 border-indigo-100 rounded-xl overflow-hidden hover:border-indigo-300 hover:scale-[1.02] bg-white"
+                <button
+                type="button"
+                onClick={() => handleCourseNavigate(courseItem?._id)}
+                key={courseItem?._id}
+                className="block w-full text-left cursor-pointer group hover:shadow-xl transition-all duration-300 border border-indigo-100 rounded-xl overflow-hidden hover:border-indigo-300 hover:scale-[1.02] bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                aria-label={`View ${courseItem?.title || "course"}`}
                 >
-                  <CardContent className="flex gap-6 p-5">
+                <Card className="border-0 shadow-none">
+                <CardContent className="flex gap-6 p-5">
                     <div className="w-48 h-32 flex-shrink-0 rounded-xl overflow-hidden">
                       <LazyLoadImage
                         src={courseItem?.image}
+                        alt={courseItem?.title || "Course thumbnail"}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         effect="blur"
                         threshold={100}
@@ -258,7 +273,8 @@ const StudentViewCoursesPage = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+                 </Card>
+                </button>
               ))
             ) : loadingState ? (
               <Skeleton />

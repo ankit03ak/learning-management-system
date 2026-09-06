@@ -7,7 +7,7 @@ import { InstructorContext } from "@/context/instructor-context";
 import { fetchInstructorCourseListService } from "@/services";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { BarChart, Book, LogOut } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -18,22 +18,35 @@ const InstructorDashboardPage = () => {
   const { instructorCoursesList, setInstructorCoursesList } =
     useContext(InstructorContext);
 
-    const {auth} = useContext(AuthContext)
-  
-    const instructorId = auth?.user?._id
+  const { auth } = useContext(AuthContext);
+  const instructorId = auth?.user?._id;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchAllCourses = async () => {
-      
-      const response = await fetchInstructorCourseListService(instructorId);
+      if (!instructorId) return;
 
-      if (response?.success) {
-        setInstructorCoursesList(response.courseList);
+      try {
+        const response = await fetchInstructorCourseListService(instructorId);
+
+        if (response?.success && isMounted) {
+          setInstructorCoursesList(response.courseList);
+        }
+      } catch (error) {
+        if (isMounted) {
+          toast.error(
+            error?.response?.data?.message || "Unable to load your courses."
+          );
+        }
       }
     };
 
     fetchAllCourses();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [instructorId, setInstructorCoursesList]);
 
   const menuItems = [
     {
@@ -57,7 +70,7 @@ const InstructorDashboardPage = () => {
   ];
 
   const handleLogOut = () => {
-    toast.success("Logged out successfully" , {autoClose: 800});
+    toast.success("Logged out successfully");
     resetCredentials();
     sessionStorage.clear();
   };

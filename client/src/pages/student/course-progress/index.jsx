@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -18,9 +19,10 @@ import {
   resetCourseProgressService,
 } from "@/services";
 import { Check, ChevronLeft, ChevronRight, Play } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const StudentCourseProgress = () => {
   const navigate = useNavigate();
@@ -37,184 +39,150 @@ const StudentCourseProgress = () => {
     useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [progressLoading, setProgressLoading] = useState(true);
+  const markedLectureRef = useRef(null);
+  const userId = auth?.user?._id;
+
+  const loadCurrentCourseProgress = useCallback(async () => {
+    if (!userId || !id) return;
+
+    setProgressLoading(true);
+    try {
+      const response = await getStudentCurrentCourseProgressService(userId, id);
+      if (!response?.success) {
+        throw new Error(response?.message || "Unable to load course progress.");
+      }
+
+      if (!response.isPurchased) {
+        setLockedCourse(true);
+        setCurrentLecture(null);
+        return;
+      }
+
+      setLockedCourse(false);
+      const courseDetails = response.courseDetails;
+      const curriculum = courseDetails?.curriculum || [];
+      const progress = response.progress || [];
+      setStudentCurrentCourseProgress({ courseDetails, progress });
+
+      if (response.isCompleted) {
+        setCurrentLecture(curriculum[0] || null);
+        setShowCourseCompleteDialog(true);
+        setShowConfetti(true);
+        return;
+      }
+
+      setShowCourseCompleteDialog(false);
+      const viewedLectureIds = new Set(
+        progress.filter((item) => item.viewed).map((item) => item.lectureId)
+      );
+      setCurrentLecture(
+        curriculum.find((lecture) => !viewedLectureIds.has(lecture._id)) ||
+          curriculum[0] ||
+          null
+      );
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        setStudentCurrentCourseProgress(null);
+        setLockedCourse(true);
+        toast.error("This course is no longer available.");
+        navigate("/student-courses", { replace: true });
+        return;
+      }
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Unable to load course progress."
+      );
+    } finally {
+      setProgressLoading(false);
+    }
+  }, [id, navigate, setStudentCurrentCourseProgress, userId]);
+
+  useEffect(() => {
+    loadCurrentCourseProgress();
+  }, [loadCurrentCourseProgress]);
 
   const handleRewatchCourse = async () => {
-    
-    const response = await resetCourseProgressService(
-      auth?.user?._id,
-      studentCurrentCourseProgress?.courseDetails?._id
-    );
-
-    if (response?.success) {
+    try {
+      const response = await resetCourseProgressService(
+        userId,
+        studentCurrentCourseProgress?.courseDetails?._id
+      );
+      if (!response?.success) {
+        throw new Error(response?.message || "Unable to reset course progress.");
+      }
+      markedLectureRef.current = null;
       setCurrentLecture(null);
       setShowConfetti(false);
       setShowCourseCompleteDialog(false);
-
-      const fetchCurrentCourseProgress = async (req, res) => {
-        const response = await getStudentCurrentCourseProgressService(
-          auth?.user?._id,
-          id
-        );
-
-        if (response?.success) {
-          if (!response?.isPurchased) {
-            setLockedCourse(true);
-          } else {
-
-            setStudentCurrentCourseProgress({
-              courseDetails: response?.courseDetails,
-              progress: response?.progress,
-            });
-          }
-
-          if (response?.isCompleted) {
-            setCurrentLecture(response?.courseDetails?.curriculum[0]);
-            setShowCourseCompleteDialog(true);
-            setShowConfetti(true);
-            return;
-          }
-
-          if (response?.progress?.length === 0) {
-            setCurrentLecture(response?.courseDetails?.curriculum[0]);
-          } else {
-            const lastIndexOfViewed = response?.progress?.reduceRight(
-              (acc, obj, index) => {
-                return acc === -1 && obj.viewed ? index : acc;
-              },
-              -1
-            );
-            setCurrentLecture(
-              response?.courseDetails?.curriculum[lastIndexOfViewed + 1]
-            );
-          }
-        }
-      };
-
-      fetchCurrentCourseProgress();
+      await loadCurrentCourseProgress();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Unable to reset course progress."
+      );
     }
   };
 
   useEffect(() => {
-    const fetchCurrentCourseProgress = async (req, res) => {
-      const response = await getStudentCurrentCourseProgressService(
-        auth?.user?._id,
-        id
-      );
-
-      if (response?.success) {
-        if (!response?.isPurchased) {
-          setLockedCourse(true);
-        } else {
-
-          setStudentCurrentCourseProgress({
-            courseDetails: response?.courseDetails,
-            progress: response?.progress,
-          });
-        }
-
-        if (response?.isCompleted) {
-          setCurrentLecture(response?.courseDetails?.curriculum[0]);
-          setShowCourseCompleteDialog(true);
-          setShowConfetti(true);
-          return;
-        }
-
-        if (response?.progress?.length === 0) {
-          setCurrentLecture(response?.courseDetails?.curriculum[0]);
-        } else {
-          const lastIndexOfViewed = response?.progress?.reduceRight(
-            (acc, obj, index) => {
-              return acc === -1 && obj.viewed ? index : acc;
-            },
-            -1
-          );
-          setCurrentLecture(
-            response?.courseDetails?.curriculum[lastIndexOfViewed + 1]
-          );
-        }
-      }
-    };
-    fetchCurrentCourseProgress();
-  }, [id]);
-
-  useEffect(() => {
-    if (currentLecture?.progressValue === 1) {
+    if (
+      currentLecture?.progressValue >= 0.95 &&
+      currentLecture?._id &&
+      markedLectureRef.current !== currentLecture._id
+    ) {
+      markedLectureRef.current = currentLecture._id;
       const updateCourseProgress = async () => {
-
-        if (currentLecture) {
-
+        try {
           const response = await markLectureAsViewedService(
-            auth?.user?._id,
+            userId,
             studentCurrentCourseProgress?.courseDetails?._id,
-            currentLecture?._id
+            currentLecture._id
           );
-
-
-          if (response?.success) {
-
-            const fetchCurrentCourseProgress = async (req, res) => {
-              const response = await getStudentCurrentCourseProgressService(
-                auth?.user?._id,
-                id
-              );
-
-              if (response?.success) {
-                if (!response?.isPurchased) {
-                  setLockedCourse(true);
-                } else {
-
-                  setStudentCurrentCourseProgress({
-                    courseDetails: response?.courseDetails,
-                    progress: response?.progress,
-                  });
-                }
-
-                if (response?.isCompleted) {
-
-                  setCurrentLecture(response?.courseDetails?.curriculum[0]);
-                  setShowCourseCompleteDialog(true);
-                  setShowConfetti(true);
-                  return;
-                }
-
-                if (response?.progress?.length === 0) {
-                  setCurrentLecture(response?.courseDetails?.curriculum[0]);
-                } else {
-                  const lastIndexOfViewed =
-                    response?.courseDetails?.curriculum?.findLastIndex(
-                      (lecture) =>
-                        response?.progress?.some(
-                          (p) => p.lectureId === lecture._id && p.viewed
-                        )
-                    );
-
-                  if (
-                    lastIndexOfViewed + 1 <
-                    response?.courseDetails?.curriculum.length
-                  )
-                    setCurrentLecture(
-                      response?.courseDetails?.curriculum[lastIndexOfViewed + 1]
-                    );
-                }
-              }
-            };
-            fetchCurrentCourseProgress();
+          if (!response?.success) {
+            throw new Error(response?.message || "Unable to save progress.");
           }
+          await loadCurrentCourseProgress();
+        } catch (error) {
+          markedLectureRef.current = null;
+          toast.error(
+            error?.response?.data?.message ||
+              error.message ||
+              "Unable to save lecture progress."
+          );
         }
       };
-
       updateCourseProgress();
     }
-  }, [currentLecture]);
+  }, [
+    currentLecture,
+    loadCurrentCourseProgress,
+    studentCurrentCourseProgress?.courseDetails?._id,
+    userId,
+  ]);
 
   useEffect(() => {
     if (showConfetti) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setShowConfetti(false);
       }, 7000);
+      return () => clearTimeout(timeout);
     }
   }, [showConfetti]);
 
+
+  if (
+    progressLoading &&
+    !lockedCourse &&
+    !studentCurrentCourseProgress?.courseDetails
+  ) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#1c1d1f] text-white">
+        Loading course progress...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-[#1c1d1f] text-white">
@@ -237,6 +205,8 @@ const StudentCourseProgress = () => {
         <Button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="z-50"
+          aria-label={isSidebarOpen ? "Hide course sidebar" : "Show course sidebar"}
+          aria-expanded={isSidebarOpen}
         >
           {isSidebarOpen ? (
             <ChevronRight className="h-5 w-5" />
@@ -297,12 +267,14 @@ const StudentCourseProgress = () => {
                         )?.viewed ? (
                           <Check className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Play
-                            className="h-4 w-4"
-                            onClick={() => {
-                              setCurrentLecture(item);
-                            }}
-                          />
+                          <button
+                            type="button"
+                            className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                            aria-label={`Play ${item?.title || "lecture"}`}
+                            onClick={() => setCurrentLecture(item)}
+                          >
+                            <Play className="h-4 w-4" />
+                          </button>
                         )}
                         <span>{item?.title}</span>
                       </div>
@@ -324,14 +296,30 @@ const StudentCourseProgress = () => {
           </Tabs>
         </div>
       </div>
-      <Dialog open={lockedCourse}>
+      <Dialog
+        open={lockedCourse}
+        onOpenChange={(open) => {
+          if (!open) {
+            setLockedCourse(false);
+            navigate("/student-courses");
+          }
+        }}
+      >
         <DialogContent className="sm:w-[425px]">
           <DialogHeader>
-            <DialogTitle>You can't access this course</DialogTitle>
+            <DialogTitle>You can&apos;t access this course</DialogTitle>
             <DialogDescription>
               Please purchase the course to access it
             </DialogDescription>
           </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <DialogClose asChild>
+              <Button variant="secondary">Back to My Courses</Button>
+            </DialogClose>
+            <Button onClick={() => navigate(`/course/details/${id}`)}>
+              Purchase Course
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

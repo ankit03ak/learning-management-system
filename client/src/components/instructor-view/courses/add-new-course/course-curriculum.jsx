@@ -11,9 +11,11 @@ import {
   mediaBulkUploadService,
   mediaDeleteService,
   mediaUploadService,
+  updateCourseByIdService,
 } from "@/services";
 import { Upload } from "lucide-react";
-import React, { useContext, useRef } from "react";
+import { useContext, useRef } from "react";
+import { toast } from "react-toastify";
 
 const CourseCurriculum = () => {
   const {
@@ -23,6 +25,7 @@ const CourseCurriculum = () => {
     setMediaUploadProgress,
     mediaUploadProgressPercentage,
     setMediaUploadProgressPercentage,
+    currentEditedCourseId,
   } = useContext(InstructorContext);
 
   const handleNewLecture = () => {
@@ -73,7 +76,7 @@ const CourseCurriculum = () => {
           setMediaUploadProgressPercentage
         );
 
-        if (res?.success) {
+        if (res?.success && res?.result?.url) {
           let copyCourseCurriculumFormData = [...courseCurriculumFormData];
           
           copyCourseCurriculumFormData[currentIndex] = {
@@ -83,13 +86,14 @@ const CourseCurriculum = () => {
           };
 
           setCourseCurriculumFormData(copyCourseCurriculumFormData);
-          setMediaUploadProgress(false);
+        } else {
+          toast.error("Unable to upload video.");
         }
-      } catch (error) {
+      } catch {
         toast.error("Error in video upload on course curriculum page");
-      }
-      finally{
-        setMediaUploadProgress(false)
+      } finally {
+        setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
       }
     } else {
       toast.error("Selected video lecture empty on course curriculum page");
@@ -102,39 +106,57 @@ const CourseCurriculum = () => {
       return (
         item &&
         typeof item === "object" &&
+        typeof item.title === "string" &&
         item.title.trim() !== "" &&
+        typeof item.videoUrl === "string" &&
         item.videoUrl.trim() !== ""
       );
     });
   };
 
-  const handleReplaceVideo = async (currentIndex) => {
-    let copyCourseCurriculumFormData = [...courseCurriculumFormData];
+  const handleReplaceVideo = async (event, currentIndex) => {
+    const selectedFile = event.target.files?.[0];
+    const currentItem = courseCurriculumFormData[currentIndex];
 
-    const currentItem = copyCourseCurriculumFormData[currentIndex];
+    if (!selectedFile || !currentItem) return;
 
-    if (!currentItem?.public_id) {
-      console.error("public_id is missing for this item.");
-      return;
-    }
+    const videoFormData = new FormData();
+    videoFormData.append("file", selectedFile);
 
-    const getCurrentVideoPublicId =
-      copyCourseCurriculumFormData[currentIndex].public_id;
+    try {
+      setMediaUploadProgress(true);
+      const uploadResponse = await mediaUploadService(
+        videoFormData,
+        setMediaUploadProgressPercentage
+      );
 
-    const deleteCurrentMedia = await mediaDeleteService(
-      getCurrentVideoPublicId
-    );
+      if (!uploadResponse?.success || !uploadResponse?.result?.url) {
+        toast.error("Unable to upload replacement video.");
+        return;
+      }
 
-
-    if (deleteCurrentMedia?.success) {
+      const replacement = uploadResponse.result;
+      const copyCourseCurriculumFormData = [...courseCurriculumFormData];
       copyCourseCurriculumFormData[currentIndex] = {
-        ...copyCourseCurriculumFormData[currentIndex],
-        videoUrl: "",
-        public_id: "",
+        ...currentItem,
+        videoUrl: replacement.url,
+        public_id: replacement.public_id,
       };
-    }
+      setCourseCurriculumFormData(copyCourseCurriculumFormData);
 
-    setCourseCurriculumFormData(copyCourseCurriculumFormData);
+      if (currentItem.public_id) {
+        const deleteResponse = await mediaDeleteService(currentItem.public_id);
+        if (!deleteResponse?.success) {
+          toast.warning("The old video could not be removed.");
+        }
+      }
+    } catch {
+      toast.error("Error replacing video.");
+    } finally {
+      setMediaUploadProgress(false);
+      setMediaUploadProgressPercentage(0);
+      event.target.value = "";
+    }
   };
 
   const bulkUploadInputRef = useRef(null);
@@ -145,7 +167,7 @@ const CourseCurriculum = () => {
 
   const areAllCourseCurriculumFormDataObjectsEmpty = (arr) => {
     return arr.every((obj) => {
-      return Object.entries(obj).every(([key, value]) => {
+      return Object.entries(obj).every(([, value]) => {
         if (typeof value === "boolean") {
           return true;
         }
@@ -156,6 +178,7 @@ const CourseCurriculum = () => {
 
   const handleMediaBulkUpload = async (event) => {
     const selectedFiles = Array.from(event.target.files);
+    if (selectedFiles.length === 0) return;
 
     const bulkFormData = new FormData();
     selectedFiles.forEach((fileItem) => bulkFormData.append("files", fileItem));
@@ -169,7 +192,7 @@ const CourseCurriculum = () => {
       );
 
 
-      if (response?.success) {
+      if (response?.success && Array.isArray(response?.result)) {
         let copyCourseCurriculumFormData =
           areAllCourseCurriculumFormDataObjectsEmpty(courseCurriculumFormData)
             ? []
@@ -177,7 +200,7 @@ const CourseCurriculum = () => {
 
         copyCourseCurriculumFormData = [
           ...copyCourseCurriculumFormData,
-          ...response?.result?.map((item, index) => ({
+          ...(response?.result || []).map((item, index) => ({
             videoUrl: item?.url,
             public_id: item?.public_id,
             title: `Lecture ${copyCourseCurriculumFormData.length + index + 1}`,
@@ -186,37 +209,61 @@ const CourseCurriculum = () => {
         ];
 
         setCourseCurriculumFormData(copyCourseCurriculumFormData);
+      } else {
+        toast.error("Unable to upload the selected videos.");
       }
-    } catch (error) {
-      toast.error("Error bulk uploading files",error);
+    } catch {
+      toast.error("Error bulk uploading files");
     } finally {
       setMediaUploadProgress(false);
+      setMediaUploadProgressPercentage(0);
     }
   };
 
   const handleDeleteLecture = async (currentIndex) => {
-    let copyCourseCurriculumFormData = [...courseCurriculumFormData];
+    const currentLecture = courseCurriculumFormData[currentIndex];
+    const updatedCurriculum = courseCurriculumFormData.filter(
+      (_, index) => index !== currentIndex
+    );
 
-    const publicId = copyCourseCurriculumFormData[currentIndex].public_id;
-
-    if (!publicId) {
-      toast.error("Public id of video to be deleted is missing");
+    if (!currentLecture) {
+      toast.error("Lecture not found.");
       return;
     }
 
-    try {
-      const response = await mediaDeleteService(publicId);
+    const publicId = currentLecture.public_id;
 
-      if (response?.success) {
-        copyCourseCurriculumFormData = copyCourseCurriculumFormData.filter(
-          (_, index) => index !== currentIndex
+    try {
+      if (currentEditedCourseId) {
+        const courseResponse = await updateCourseByIdService(
+          currentEditedCourseId,
+          { curriculum: updatedCurriculum }
         );
-        setCourseCurriculumFormData(copyCourseCurriculumFormData);
+
+        if (!courseResponse?.success) {
+          toast.error(courseResponse?.message || "Unable to delete lecture.");
+          return;
+        }
       }
+
+      if (publicId) {
+        try {
+          await mediaDeleteService(publicId);
+        } catch (error) {
+          if (error?.response?.status !== 404) {
+            toast.warning(
+              "Lecture removed, but its uploaded media could not be deleted."
+            );
+          }
+        }
+      }
+
+      setCourseCurriculumFormData(updatedCurriculum);
       toast.success("Lecture deleted successfully");
-      
     } catch (error) {
-      toast.error("Error deleting lecture");
+      toast.error(
+        error?.response?.data?.message || "Error deleting lecture"
+      );
     }
   };
 
@@ -294,8 +341,19 @@ const CourseCurriculum = () => {
                       height="200px"
                       useProgressUpdate={false}
                     />
-                    <Button onClick={() => handleReplaceVideo(index)}>
-                      Repalce Lecture
+                    <Input
+                      id={`replace-video-${index}`}
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={(event) =>
+                        handleReplaceVideo(event, index)
+                      }
+                    />
+                    <Button asChild>
+                      <label htmlFor={`replace-video-${index}`}>
+                        Replace Lecture
+                      </label>
                     </Button>
                     <Button
                       className="bg-red-600"

@@ -20,17 +20,20 @@ export const checkAuthService = async () => {
 export const mediaUploadService = async (formData, onProgressCallBack) => {
   const res = await axiosInstance.post("/media/upload", formData, {
     onUploadProgress: (progressEvent) => {
+      if (!progressEvent.total) return;
       const percentCompleted = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
       );
-      onProgressCallBack(percentCompleted);
+      onProgressCallBack?.(percentCompleted);
     },
   });  
   return res.data;
 };
 
 export const mediaDeleteService = async (id) => {
-  const res = await axiosInstance.delete(`/media/delete/${id}`);
+  const res = await axiosInstance.delete(
+    `/media/delete/${encodeURIComponent(id)}`
+  );
   return res.data;
 };
 
@@ -57,13 +60,19 @@ export const updateCourseByIdService = async (id, formData) => {
   return res.data;
 };
 
+export const deleteCourseByIdService = async (id) => {
+  const res = await axiosInstance.delete(`/instructor/course/delete/${id}`);
+  return res.data;
+};
+
 export const mediaBulkUploadService = async (formData, onProgressCallBack) => {
   const res = await axiosInstance.post("/media/bulk-upload", formData, {
     onUploadProgress: (progressEvent) => {
+      if (!progressEvent.total) return;
       const percentCompleted = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
       );
-      onProgressCallBack(percentCompleted);
+      onProgressCallBack?.(percentCompleted);
     },
   });
 

@@ -5,6 +5,7 @@ import { ClipLoader } from "react-spinners";
 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PropTypes from "prop-types";
 
 export const AuthContext = createContext(null);
 
@@ -13,7 +14,6 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (email) => emailRegex.test(email);
 
 export default function AuthProvider({ children }) {
-  
   const [signInFormData, setSignInFormData] = useState(initalSignInFormData);
   const [signUpFormData, setSignUpFormData] = useState(initalSignUpFormData);
   const [auth, setAuth] = useState({ authenticated: false, user: null });
@@ -28,7 +28,7 @@ export default function AuthProvider({ children }) {
     toast.error("All fields are required");
     return;
   }
-  
+
   if (!isValidEmail(userEmail)) {
     toast.error("Please enter a valid email address");
     return;
@@ -48,7 +48,7 @@ export default function AuthProvider({ children }) {
     JSON.stringify(data.user || data.newUser)
   );
 
-  toast.success("Registration successful!", { autoClose: 800 });
+  toast.success("Registration successful!");
 
   setAuth({
     authenticated: true,
@@ -92,7 +92,7 @@ export default function AuthProvider({ children }) {
       // );
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user || data.newUser));
-      toast.success("Login successful!", { autoClose: 800 });
+      toast.success("Login successful!");
       setAuth({
         authenticated: true,
         user: data.user || data.newUser,
@@ -132,39 +132,59 @@ export default function AuthProvider({ children }) {
       }
     } catch (error) {
       console.log("Authentication check error", error);
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.status &&
-        error.response.data.status === 401
-      ) {
-        setAuth({
-          authenticated: false,
-          user: null,
-        });
-      }
+      setAuth({ authenticated: false, user: null });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
       setLoading(false);
     }
   };
 
-useEffect(() => {
-  const token = localStorage.getItem("accessToken");
-  const user = localStorage.getItem("user");
+  useEffect(() => {
+    let isMounted = true;
 
-  if (token && user) {
-    setAuth({
-      authenticated: true,
-      user: JSON.parse(user),
-    });
-    setLoading(false);
-  } else {
-    checkAuthUser();
-  }
-}, []);
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("accessToken");
+      const storedUser = localStorage.getItem("user");
+
+      if (!token || !storedUser) {
+        if (isMounted) {
+          await checkAuthUser();
+        }
+        return;
+      }
+
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (!parsedUser || typeof parsedUser !== "object") {
+          throw new Error("Invalid stored user");
+        }
+
+        if (isMounted) {
+          setAuth({ authenticated: true, user: parsedUser });
+          // Verify the cached session instead of trusting stale browser data.
+          await checkAuthUser();
+        }
+      } catch {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        if (isMounted) {
+          setAuth({ authenticated: false, user: null });
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 const resetCredentials = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("user");
+  sessionStorage.removeItem("accessToken");
   setAuth({ authenticated: false, user: null });
 };
 
@@ -193,3 +213,7 @@ const resetCredentials = () => {
     </AuthContext.Provider>
   );
 }
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

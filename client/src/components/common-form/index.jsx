@@ -1,6 +1,6 @@
-import React from "react";
 import { Button } from "../ui/button";
 import FormControls from "./form-controls";
+import PropTypes from "prop-types";
 
 const CommonForm = ({
   handleSubmit,
@@ -22,6 +22,15 @@ const CommonForm = ({
       </Button>
     </form>
   );
+};
+
+CommonForm.propTypes = {
+  handleSubmit: PropTypes.func.isRequired,
+  buttonText: PropTypes.string,
+  formControls: PropTypes.array,
+  formData: PropTypes.object,
+  setFormData: PropTypes.func.isRequired,
+  isButtonDisabled: PropTypes.bool,
 };
 
 export default CommonForm;

@@ -9,9 +9,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signInFormControls, signUpFormControls } from "@/config";
 import { AuthContext } from "@/context/auth-context/index";
-import { GraduationCap } from "lucide-react";
-import React, { useState } from "react";
-import { useContext } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -59,16 +57,18 @@ const AuthPage = () => {
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
       <header className="px-4 lg:px-6 h-20 flex items-center border-b border-indigo-100 bg-white/80 backdrop-blur-sm z-50 flex-shrink-0">
-        <div
+        <button
+          type="button"
           onClick={handleNavigate}
-          className="flex items-center justify-center cursor-pointer group "
+          className="flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+          aria-label="Go to home page"
         >
           <img
                 src="/logo.png"
                 alt="LMS Logo"
                 className="w-18 h-16"
               />
-        </div>
+        </button>
       </header>
       <div className="flex items-center justify-center flex-1 p-4 overflow-auto">
         <Tabs

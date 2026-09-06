@@ -3,6 +3,7 @@ import {
   courseLandingInitialFormData,
 } from "@/config";
 import { createContext, useState } from "react";
+import PropTypes from "prop-types";
 
 export const InstructorContext = createContext(null);
 
@@ -44,3 +45,7 @@ export default function InstructorProvider({ children }) {
     </InstructorContext.Provider>
   );
 }
+
+InstructorProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

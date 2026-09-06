@@ -1,5 +1,4 @@
-import { GraduationCap, TvMinimalPlay } from "lucide-react";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { AuthContext } from "@/context/auth-context";
@@ -11,7 +10,7 @@ const StudentViewCommonHeader = () => {
   const { resetCredentials } = useContext(AuthContext);
 
   const handleLogOut = () => {
-    toast.success("Logged out successfully" , {autoClose: 800});
+    toast.success("Logged out successfully");
     resetCredentials();
     sessionStorage.clear();
   };
@@ -39,15 +38,17 @@ const StudentViewCommonHeader = () => {
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex gap-3 md:gap-4 items-center">
-            <div
+            <button
+              type="button"
               className="flex gap-2 md:gap-3 items-center cursor-pointer group hover:opacity-80 transition-all duration-300"
               onClick={() => navigate("/student-courses")}
+              aria-label="Open My Courses"
             >
               <span className="font-bold md:text-lg text-sm text-blue-500 group-hover:text-indigo-600 transition-colors mr-8 bg-slate-200 hover:bg-slate-300 border-collapse rounded-full px-3 py-1">
                 My Courses
               </span>
           
-            </div>
+            </button>
             <Button 
               onClick={handleLogOut}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-4 md:px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"

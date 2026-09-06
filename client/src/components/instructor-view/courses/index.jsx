@@ -12,11 +12,13 @@ import {
   courseCurriculumInitialFormData,
   courseLandingInitialFormData,
 } from "@/config";
-
 import { InstructorContext } from "@/context/instructor-context";
 import { Delete, Edit } from "lucide-react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { deleteCourseByIdService } from "@/services";
+import PropTypes from "prop-types";
 
 const InstructorCourses = ({ listOfCourses }) => {
   const navigate = useNavigate();
@@ -25,9 +27,28 @@ const InstructorCourses = ({ listOfCourses }) => {
     setCurrentEditedCourseId,
     setCourseLandingFormData,
     setCourseCurriculumFormData,
+    setInstructorCoursesList,
   } = useContext(InstructorContext);
 
-    
+  const handleDeleteCourse = async (course) => {
+    if (!course?._id || !window.confirm(`Remove "${course.title}"?`)) return;
+
+    try {
+      const response = await deleteCourseByIdService(course._id);
+      if (response?.success) {
+        setInstructorCoursesList((courses) =>
+          courses.filter((item) => item._id !== course._id)
+        );
+        toast.success("Course removed successfully");
+      } else {
+        toast.error(response?.message || "Unable to remove course");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to remove course"
+      );
+    }
+  };
 
   return (
     <div>
@@ -90,6 +111,7 @@ const InstructorCourses = ({ listOfCourses }) => {
                                   `/instructor/edit-course/${course?._id}`
                                 );
                               }}
+                              aria-label={`Edit ${course?.title || "course"}`}
                             >
                               <Edit className="h-5 w-5" />
                             </Button>
@@ -97,6 +119,8 @@ const InstructorCourses = ({ listOfCourses }) => {
                               variant="ghost" 
                               size="sm"
                               className="hover:bg-red-100 hover:text-red-600 rounded-lg transition-all duration-200"
+                              aria-label={`Remove ${course?.title || "course"}`}
+                              onClick={() => handleDeleteCourse(course)}
                             >
                               <Delete className="h-5 w-5" />
                             </Button>
@@ -112,6 +136,10 @@ const InstructorCourses = ({ listOfCourses }) => {
       </Card>
     </div>
   );
+};
+
+InstructorCourses.propTypes = {
+  listOfCourses: PropTypes.array,
 };
 
 export default InstructorCourses;

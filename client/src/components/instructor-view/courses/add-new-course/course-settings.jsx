@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InstructorContext } from "@/context/instructor-context";
 import { mediaDeleteService, mediaUploadService } from "@/services";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
+import { toast } from "react-toastify";
 
 const CourseSettings = () => {
   const {
@@ -34,38 +35,32 @@ const CourseSettings = () => {
           setMediaUploadProgressPercentage
         );
 
-        if (res?.success) {
-
-          setCourseLandingFormData({
-            ...courseLandingFormData,
-            image: res?.result?.url,
-            imagePublicId: res?.result?.public_id,
-          });
-
-          setMediaUploadProgress(false);
+        if (!res?.success || !res?.result?.url) {
+          toast.error("Unable to upload course thumbnail.");
+          return;
         }
-      } catch (error) {}
-    } else {
-    }
-  };
 
-  const handleReplaceImage = async () => {
+        const oldImagePublicId = courseLandingFormData.imagePublicId;
+        setCourseLandingFormData({
+          ...courseLandingFormData,
+          image: res.result.url,
+          imagePublicId: res.result.public_id,
+        });
 
-    const imagePublicId = courseLandingFormData.imagePublicId;
-
-    if (!imagePublicId) {
-      toast.warning("Public ID missing for image replacement");
-      return;
-    }
-
-    const response = await mediaDeleteService(imagePublicId);
-
-    if (response?.success) {
-      setCourseLandingFormData({
-        ...courseLandingFormData,
-        image: "",
-        imagePublicId: "",
-      });
+        // Delete only after the replacement has uploaded successfully.
+        if (oldImagePublicId) {
+          const deleteResponse = await mediaDeleteService(oldImagePublicId);
+          if (!deleteResponse?.success) {
+            toast.warning("The old thumbnail could not be removed.");
+          }
+        }
+      } catch {
+        toast.error("Error uploading course thumbnail.");
+      } finally {
+        setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
+        event.target.value = "";
+      }
     }
   };
 
@@ -87,8 +82,15 @@ const CourseSettings = () => {
         {courseLandingFormData?.image ? (
           <div>
             <div className="flex mb-3 items-center justify-center">
-              <Button onClick={() => handleReplaceImage()}>
-                Replace Image
+              <Input
+                id="replace-course-image"
+                onChange={handleImageChange}
+                type="file"
+                accept="image/*"
+                className="hidden"
+              />
+              <Button asChild>
+                <label htmlFor="replace-course-image">Replace Image</label>
               </Button>
             </div>
             <LazyLoadImage
@@ -99,8 +101,13 @@ const CourseSettings = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <Label>Uplaod course thumbnail</Label>
-            <Input onChange={handleImageChange} type="file" accept="image/*" />
+            <Label htmlFor="course-image-upload">Upload course thumbnail</Label>
+            <Input
+              id="course-image-upload"
+              onChange={handleImageChange}
+              type="file"
+              accept="image/*"
+            />
           </div>
         )}
       </CardContent>

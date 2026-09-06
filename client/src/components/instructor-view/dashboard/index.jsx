@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -8,18 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, IndianRupee, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { IndianRupee, Users } from "lucide-react";
+import { useMemo } from "react";
+import PropTypes from "prop-types";
 
 const InstructorDashboard = ({ listOfCourses }) => {
-  const calculateTotalStudentsAndRevenue = () => {
-    const { totalStudents, totalRevenue, studentList } = listOfCourses.reduce(
+  const { totalStudents, totalRevenue, studentList } = useMemo(() => {
+    return (listOfCourses || []).reduce(
       (acc, course) => {
-        const studentCount = course.students.length;
+        const students = course.students || [];
+        const studentCount = students.length;
         acc.totalStudents += studentCount;
-        acc.totalRevenue += course.pricing * studentCount;
+        acc.totalRevenue += Number(course.pricing || 0) * studentCount;
 
-        course.students.forEach((student) => {
+        students.forEach((student) => {
           acc.studentList.push({
             courseTitle: course.title,
             studentName: student.studentName,
@@ -34,47 +35,20 @@ const InstructorDashboard = ({ listOfCourses }) => {
         studentList: [],
       }
     );
-    return {
-      totalStudents,
-      totalRevenue,
-      studentList,
-    };
-  };
+  }, [listOfCourses]);
 
-  const [config, setConfig] = useState([
+  const config = [
     {
       icon: Users,
       label: "Total Students",
-      value: 10,
+      value: totalStudents,
     },
     {
       icon: IndianRupee,
       label: "Total Revenue",
-      value: 100,
+      value: totalRevenue,
     },
-  ]);
-
-  const [studentList, setStudentList] = useState([]);
-
-  useEffect(() => {
-    const result = calculateTotalStudentsAndRevenue();
-  
-
-    setConfig([
-      {
-        icon: Users,
-        label: "Total Students",
-        value: result.totalStudents,
-      },
-      {
-        icon: IndianRupee,
-        label: "Total Revenue",
-        value: result.totalRevenue,
-      },
-    ]);
-
-    setStudentList(result.studentList);
-  }, [listOfCourses]);
+  ];
 
 
 
@@ -146,6 +120,10 @@ const InstructorDashboard = ({ listOfCourses }) => {
       </Card>
     </div>
   );
+};
+
+InstructorDashboard.propTypes = {
+  listOfCourses: PropTypes.array,
 };
 
 export default InstructorDashboard;

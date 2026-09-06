@@ -6,11 +6,11 @@ import {
   checkCoursePurchaseInfoService,
   fetchStudentViewCourseListService,
 } from "@/services";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
-import { px } from "framer-motion";
+import { toast } from "react-toastify";
 //image from public folder
 import image01 from "../../../assets/image01.png"
 
@@ -33,38 +33,49 @@ const StudentHomePage = () => {
 
   const handleCourseNavigate = async (currentCourseId) => {
 
-    const response = await checkCoursePurchaseInfoService(
-      currentCourseId,
-      auth?.user?._id
-    );
+    try {
+      const response = await checkCoursePurchaseInfoService(
+        currentCourseId,
+        auth?.user?._id
+      );
 
-    if (response?.success) {
-      if (response?.boughtOrNot) {
-        navigate(`/course-progress/${currentCourseId}`);
-      } else {
-        navigate(`/course/details/${currentCourseId}`);
+      if (response?.success) {
+        if (response?.boughtOrNot) {
+          navigate(`/course-progress/${currentCourseId}`);
+        } else {
+          navigate(`/course/details/${currentCourseId}`);
+        }
       }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to open this course."
+      );
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchAllCoursesOfStudent = async () => {
       try {
         const response = await fetchStudentViewCourseListService();
-        if (response?.success) {
+        if (response?.success && isMounted) {
           setStudentViewCoursesList(response?.courseList);
         }
       } catch (error) {
-        console.log("Error fetching courses of the student", error);
-        toast.error(
-          error?.response?.data?.message ||
-            "Error fetching courses. Please try again."
-        );
+        if (isMounted) {
+          toast.error(
+            error?.response?.data?.message ||
+              "Error fetching courses. Please try again."
+          );
+        }
       }
     };
 
     fetchAllCoursesOfStudent();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [setStudentViewCoursesList]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -78,7 +89,7 @@ const StudentHomePage = () => {
         <div className="lg:w-full mb-8 lg:mb-0">
           <LazyLoadImage
             src={image01}
-            alt=""
+            alt="Students learning online"
             width={600}
             height={400}
             className="w-full h-auto rounded-2xl shadow-2xl border border-indigo-100"
@@ -111,16 +122,19 @@ const StudentHomePage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
             studentViewCoursesList.map((courseItem) => (
-              <div
+              <button
+                type="button"
                 key={courseItem?._id}
                 onClick={() => {
                   handleCourseNavigate(courseItem?._id);
                 }}
                 className="group border-2 border-indigo-100 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-300 hover:scale-105 bg-white hover:border-indigo-300"
+                aria-label={`View ${courseItem?.title || "course"}`}
               >
                 <div className="relative overflow-hidden">
                   <LazyLoadImage
                     src={courseItem.image}
+                    alt={courseItem?.title || "Course thumbnail"}
                     width={300}
                     height={150}
                     className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -129,7 +143,6 @@ const StudentHomePage = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-105 transition-opacity duration-300"></div>
                 </div>
-
                 <div className="p-5 space-y-2">
                   <h3 className="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition-colors line-clamp-2">
                     {courseItem?.title}
@@ -143,7 +156,7 @@ const StudentHomePage = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+                </button>
             ))
           ) : (
             <div className="col-span-full text-center py-12">

@@ -4,9 +4,10 @@ import { AuthContext } from "@/context/auth-context";
 import { StudentContext } from "@/context/student-context";
 import { fetchStudentBoughtCoursesService } from "@/services";
 import {Watch } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
+import { toast } from "react-toastify";
 
 
 const StudentCoursesPage = () => {
@@ -28,16 +29,21 @@ const StudentCoursesPage = () => {
 
         if (response?.success) {
           setStudentBoughtCoursesList(response?.courses);
+        } else {
+          toast.error(response?.message || "Unable to load purchased courses.");
         }
       } catch (error) {
         console.error("Error fetching courses", error);
+        toast.error(
+          error?.response?.data?.message || "Unable to load purchased courses."
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchStudentBoughtCourses();
-  }, []);
+  }, [auth?.user?._id, setStudentBoughtCoursesList]);
 
   return (
     <div className="p-4">
@@ -77,7 +83,7 @@ const StudentCoursesPage = () => {
           ))}
         </div>
       ) : (
-        <h1 className="text-3xl font-bold">No Courses found</h1>
+        <h1 className="text-3xl font-bold">No courses purchased yet</h1>
       )}
     </div>
   );

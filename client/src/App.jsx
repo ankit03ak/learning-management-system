@@ -39,7 +39,12 @@ function App() {
         </div>
       }
     >
-      <ToastContainer/>
+      <ToastContainer
+        autoClose={1750}
+        closeOnClick
+        pauseOnHover
+        newestOnTop
+      />
       <Routes>
         <Route
           path="/auth"

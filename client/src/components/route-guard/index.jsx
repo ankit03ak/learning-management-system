@@ -1,5 +1,6 @@
-import React, { Fragment } from "react";
+import { Fragment } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import PropTypes from "prop-types";
 
 const RouteGuard = ({ authenticated, user, element }) => {
   const location = useLocation();
@@ -27,6 +28,12 @@ const RouteGuard = ({ authenticated, user, element }) => {
   }
 
   return <Fragment>{element}</Fragment>
+};
+
+RouteGuard.propTypes = {
+  authenticated: PropTypes.bool,
+  user: PropTypes.object,
+  element: PropTypes.node.isRequired,
 };
 
 export default RouteGuard;

@@ -1,50 +1,90 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { captureAndFinalizePaymentService } from "@/services";
-import React, { useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
+import { toast } from "react-toastify";
 
 const PaypalPaymentReturnPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
 
   const paymentId = params.get("paymentId");
   const payerId = params.get("PayerID");
-
-
+  const [status, setStatus] = useState("processing");
 
   useEffect(() => {
-  if (payerId && paymentId) {
+    let isMounted = true;
     const capturePayment = async () => {
-      const currentOrderId = sessionStorage.getItem("currentOrderId");
+      if (!payerId || !paymentId) {
+        toast.error("Payment details missing. Please contact support.");
+        if (isMounted) setStatus("error");
+        return;
+      }
 
-      if (currentOrderId) {
+      const currentOrderId = sessionStorage.getItem("currentOrderId");
+      if (!currentOrderId) {
+        toast.error("Order information not found. Please contact support.");
+        if (isMounted) setStatus("error");
+        return;
+      }
+
+      try {
         const response = await captureAndFinalizePaymentService({
           paymentId,
           payerId,
           orderId: currentOrderId,
         });
 
-        if (response?.success) {
-          sessionStorage.removeItem("currentOrderId");
-          window.location.href = "/student-courses";
+        if (!response?.success) {
+          throw new Error(response?.message || "Unable to complete payment.");
         }
-      } else {
-        toast.error("Order information not found. Please contact support.");
-        return;
+        sessionStorage.removeItem("currentOrderId");
+        if (isMounted) {
+          setStatus("success");
+          navigate("/student-courses", { replace: true });
+        }
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.message ||
+            error.message ||
+            "Unable to complete payment. Please try again."
+        );
+        if (isMounted) setStatus("error");
       }
     };
-    capturePayment();
-  } else {
-    toast.error("Payment details missing. Please contact support.");
-    return;
-  }
-}, [payerId, paymentId]);
 
+    capturePayment();
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, payerId, paymentId]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Processing payemnt... Please wait</CardTitle>
+        <CardTitle>
+          {status === "processing" ? (
+            <span className="flex items-center gap-2">
+              <ClipLoader size={18} />
+              Processing payment... Please wait
+            </span>
+          ) : status === "error" ? (
+            "Payment could not be completed"
+          ) : (
+            "Payment completed"
+          )}
+        </CardTitle>
+        {status === "error" && (
+          <button
+            type="button"
+            className="text-left text-indigo-600 underline"
+            onClick={() => navigate("/student-courses")}
+          >
+            Return to My Courses
+          </button>
+        )}
       </CardHeader>
     </Card>
   );

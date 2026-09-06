@@ -2,7 +2,6 @@ import FormControls from "@/components/common-form/form-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { courseLandingPageFormControls } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
-import React from "react";
 import { useContext } from "react";
 
 const CourseLanding = () => {

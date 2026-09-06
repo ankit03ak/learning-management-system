@@ -18,9 +18,13 @@ const uploadMediaToCloudinary = async (filePath) => {
   }
 };
 
-const deleteMediaFromCloudinary = async (publicId) => {
+const deleteMediaFromCloudinary = async (publicId, resourceType = "image") => {
   try {
-    await cloudinary.uploader.destroy(publicId);
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: ["image", "video", "raw"].includes(resourceType)
+        ? resourceType
+        : "image",
+    });
   } catch (error) {
     throw new Error("Failed to delete asset from cloudinary");
   }

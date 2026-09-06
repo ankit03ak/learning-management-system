@@ -1,62 +1,25 @@
 const User = require("../../modals/user.js");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { signAccessToken } = require("../../helpers/jwt");
 
-// const registerUser = async (req, res) => {
-//   const { userName, userEmail, userPassword, role } = req.body;
-
-//   if (!userName || !userEmail || !userPassword || !role) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "userName, userEmail, userPassword and role are required",
-//       });
-//     }
-
-
-//   const allowedRoles = ["student", "instructor"];
-//     if (!allowedRoles.includes(role)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid role. Allowed roles are: student, instructor",
-//       });
-//     }
-
-//   const existingUser = await User.findOne({
-//     $or: [{ userEmail: userEmail }, { userName: userName }],
-//   });
-
-//   if (existingUser) {
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "User already exists" });
-//   }
-
-//   const hashedPassword = await bcrypt.hash(userPassword, 10);
-
-//   const newUser = new User({
-//     userName,
-//     userEmail,
-//     userPassword: hashedPassword,
-//     role,
-//   });
-//   await newUser.save();
-
-//   return res
-//     .status(200)
-//     .json({ success: true, message: "User registered successfully", newUser });
-// };
 const registerUser = async (req, res) => {
   try {
-    let { userName, userEmail, userPassword, role } = req.body;
+    let { userName, userEmail, userPassword, role } = req.body || {};
 
-    if (!userName || !userEmail || !userPassword || !role) {
+    if (
+      typeof userName !== "string" ||
+      typeof userEmail !== "string" ||
+      typeof userPassword !== "string" ||
+      typeof role !== "string"
+    ) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
     }
 
-    userEmail = userEmail.toLowerCase();
+    userName = userName.trim();
+    userEmail = userEmail.trim().toLowerCase();
 
     const allowedRoles = ["student", "instructor"];
     if (!allowedRoles.includes(role)) {
@@ -66,7 +29,14 @@ const registerUser = async (req, res) => {
       });
     }
 
-    if (userPassword.length < 6) {
+    if (userName.length < 2 || userName.length > 64) {
+      return res.status(400).json({
+        success: false,
+        message: "Username must be between 2 and 64 characters",
+      });
+    }
+
+    if (userPassword.length < 6 || userPassword.length > 128) {
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters long",
@@ -103,16 +73,9 @@ const registerUser = async (req, res) => {
 
     // console.log("Request Body: working", req.body);
 
-    const accessToken = jwt.sign(
-  {
-    _id: newUser._id,
-    userName: newUser.userName,
-    userEmail: newUser.userEmail,
-    role: newUser.role,
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "24h" }
-);
+    const accessToken = signAccessToken({
+      _id: newUser._id,
+    });
 
     return res.status(201).json({
       success: true,
@@ -122,6 +85,12 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Register error:", error);
+    if (error && error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -132,9 +101,14 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { userEmail, userPassword } = req.body;
+    const { userEmail, userPassword } = req.body || {};
 
-    if (!userEmail || !userPassword) {
+    if (
+      typeof userEmail !== "string" ||
+      typeof userPassword !== "string" ||
+      !userEmail.trim() ||
+      !userPassword
+    ) {
       return res.status(400).json({
         success: false,
         message: "Email and password are required",
@@ -164,16 +138,9 @@ const loginUser = async (req, res) => {
       });
     }
 
-    const accessToken = jwt.sign(
-      {
-        _id: user._id,
-        userName: user.userName,
-        userEmail: user.userEmail,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    const accessToken = signAccessToken({
+      _id: user._id,
+    });
 
     user.userPassword = undefined;
 

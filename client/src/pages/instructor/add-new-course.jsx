@@ -15,8 +15,9 @@ import {
   fetchInstructorCourseDetailsService,
   updateCourseByIdService,
 } from "@/services";
-import React, { useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddNewCoursePage = () => {
   const navigate = useNavigate();
@@ -35,34 +36,62 @@ const AddNewCoursePage = () => {
       return value.length === 0;
     }
 
-    return value === "" || value === null || value === undefined;
+    return (
+      value === "" ||
+      value === null ||
+      value === undefined ||
+      (typeof value === "string" && value.trim() === "")
+    );
   };
 
   const validateFormData = () => {
-    for (const key in courseLandingFormData) {
+    const requiredLandingFields = [
+      "title",
+      "category",
+      "level",
+      "primaryLanguage",
+      "description",
+      "pricing",
+    ];
+
+    for (const key of requiredLandingFields) {
       if (isEmpty(courseLandingFormData[key])) {
         return false;
       }
     }
 
-    let hasfreePreview = false;
+    const textLimits = {
+      title: 200,
+      subtitle: 300,
+      description: 10000,
+      objectives: 5000,
+      welcomeMessage: 5000,
+    };
+    for (const [key, limit] of Object.entries(textLimits)) {
+      if (String(courseLandingFormData[key]).trim().length > limit) {
+        return false;
+      }
+    }
+
+    const pricing = Number(courseLandingFormData.pricing);
+    if (!Number.isFinite(pricing) || pricing < 0 || pricing > 1000000) {
+      return false;
+    }
 
     for (const item of courseCurriculumFormData) {
       if (
+        !item ||
         isEmpty(item.title) ||
         isEmpty(item.videoUrl) ||
-        isEmpty(item.public_id)
+        String(item.title).trim().length > 200 ||
+        String(item.videoUrl).trim().length > 2048
       ) {
 
         return false;
       }
-
-      if (item.freePreview) {
-        hasfreePreview = true; //at least 1 video has free preview
-      }
     }
 
-    return hasfreePreview;
+    return courseCurriculumFormData.length > 0;
   };
 
   const { auth } = useContext(AuthContext);
@@ -83,19 +112,22 @@ const AddNewCoursePage = () => {
       curriculum: courseCurriculumFormData
     }
 
-    const result =
-      currentEditedCourseId !== null
-        ? await updateCourseByIdService(
-            currentEditedCourseId,
-            updateData
-          )
-        : await addNewCourseService(courseFinalFormData);
+    try {
+      const result =
+        currentEditedCourseId !== null
+          ? await updateCourseByIdService(currentEditedCourseId, updateData)
+          : await addNewCourseService(courseFinalFormData);
 
-    if (result?.success) {
-      setCourseLandingFormData(courseLandingInitialFormData);
-      setCourseCurriculumFormData(courseCurriculumInitialFormData);
-      setCurrentEditedCourseId(null)
-      navigate(-1);
+      if (result?.success) {
+        setCourseLandingFormData(courseLandingInitialFormData);
+        setCourseCurriculumFormData(courseCurriculumInitialFormData);
+        setCurrentEditedCourseId(null);
+        navigate(-1);
+      } else {
+        toast.error(result?.message || "Unable to save course.");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to save course.");
     }
   };
 
@@ -105,34 +137,51 @@ const AddNewCoursePage = () => {
     if (params?.courseId) {
       setCurrentEditedCourseId(params?.courseId);
     }
-  }, [params?.courseId]);
+  }, [params?.courseId, setCurrentEditedCourseId]);
 
   useEffect(() => {
+    let isMounted = true;
 
     if (currentEditedCourseId !== null) {
       const fetchCourseDetails = async () => {
-        const response = await fetchInstructorCourseDetailsService(
-          currentEditedCourseId
-        );
-
-        if (response?.success) {
-          const setCourseFormData = Object.keys(courseLandingFormData).reduce(
-            (acc, key) => {
-              acc[key] =
-                response?.courseDetails[key] ||
-                courseLandingInitialFormData[key];
-              return acc;
-            },
-            {}
+        try {
+          const response = await fetchInstructorCourseDetailsService(
+            currentEditedCourseId
           );
 
-          setCourseLandingFormData(setCourseFormData);
-          setCourseCurriculumFormData(response?.courseDetails?.curriculum);
+          if (response?.success && isMounted) {
+            const setCourseFormData = Object.keys(courseLandingInitialFormData).reduce(
+              (acc, key) => {
+                acc[key] =
+                  response?.courseDetails[key] ||
+                  courseLandingInitialFormData[key];
+                return acc;
+              },
+              {}
+            );
+
+            setCourseLandingFormData(setCourseFormData);
+            setCourseCurriculumFormData(response?.courseDetails?.curriculum || []);
+          }
+        } catch (error) {
+          if (isMounted) {
+            toast.error(
+              error?.response?.data?.message || "Unable to load course."
+            );
+          }
         }
       };
       fetchCourseDetails();
     }
-  }, [currentEditedCourseId]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    currentEditedCourseId,
+    setCourseCurriculumFormData,
+    setCourseLandingFormData,
+  ]);
 
   return (
     <div className="container mx-auto p-4">
