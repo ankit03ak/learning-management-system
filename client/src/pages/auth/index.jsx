@@ -65,7 +65,7 @@ const AuthPage = () => {
           <img
             src="/logo.png"
             alt="LMS Logo"
-            className="h-18 w-16 object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </div>
       </header>

@@ -11,7 +11,7 @@ const StudentViewCommonHeader = () => {
   const { resetCredentials } = useContext(AuthContext);
 
   const handleLogOut = () => {
-    toast.success("Logged out successfully" , {autoClose: 800});
+    toast.success("Logged out successfully" , {autoClose: 1300});
     resetCredentials();
     sessionStorage.clear();
   };
@@ -24,7 +24,7 @@ const StudentViewCommonHeader = () => {
               <img
                 src="/logo.png"
                 alt="LMS Logo"
-                className="h-12 w-14 object-contain"
+                className="h-16 w-auto object-contain"
               />
           </Link>
           <div className="hidden items-center space-x-1 sm:flex">

@@ -16,7 +16,7 @@ const NotFoundPage = () => {
           <img
             src="/logo.png"
             alt="LMS Logo"
-            className="w-full h-full object-contain"
+            className="w-24 h-auto object-contain"
           />
         </div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
