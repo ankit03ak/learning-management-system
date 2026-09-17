@@ -57,7 +57,7 @@ const InstructorDashboardPage = () => {
   ];
 
   const handleLogOut = () => {
-    toast.success("Logged out successfully" , {autoClose: 800});
+    toast.success("Logged out successfully" , {autoClose: 1300});
     resetCredentials();
     sessionStorage.clear();
   };
@@ -72,7 +72,7 @@ const InstructorDashboardPage = () => {
                   <img
                     src="/logo.png"
                     alt="LMS Logo"
-                    className="w-24 h-24 object-contain ml-14"
+                    className="w-16 h-auto object-contain ml-14"
                   />
             </Link>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">

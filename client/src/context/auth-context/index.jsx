@@ -95,7 +95,7 @@ export default function AuthProvider({ children }) {
       // );
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user || data.newUser));
-      toast.success("Login successful!", { autoClose: 800 });
+      toast.success("Login successful!", { autoClose: 1300 });
       setAuth({
         authenticated: true,
         user: data.user || data.newUser,
