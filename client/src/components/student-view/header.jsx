@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "react-toastify";
+import ThemeToggle from "@/components/theme-toggle";
 
 const StudentViewCommonHeader = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const StudentViewCommonHeader = () => {
 
   return (
     <div>
-      <header className="flex items-center justify-between px-4 py-3 lg:px-10 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl sticky top-0 z-50 shadow-[0_4px_24px_rgba(15,23,42,0.06)]">
+      <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 py-3 lg:px-10 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl shadow-[0_4px_24px_rgba(15,23,42,0.06)]">
       <div className="flex items-center gap-3">
           <Link to="/home" className="flex items-center hover:opacity-80 transition-opacity group">
               <img
@@ -38,6 +39,7 @@ const StudentViewCommonHeader = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <div className="flex gap-2 md:gap-3 items-center">
             <div
               className="flex gap-2 md:gap-3 items-center cursor-pointer group hover:opacity-80 transition-all duration-300"

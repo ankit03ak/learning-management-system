@@ -10,6 +10,7 @@ import { BarChart, Book, LogOut } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import ThemeToggle from "@/components/theme-toggle";
 
 const InstructorDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -64,15 +65,18 @@ const InstructorDashboardPage = () => {
 
 
   return (
-    <div className="flex h-full min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <aside className="w-64 bg-white shadow-xl hidden md:block border-r-2 border-indigo-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <aside className="sticky top-0 h-screen w-64 flex-shrink-0 self-start bg-white shadow-xl hidden md:block border-r-2 border-indigo-100">
         <div className="p-6">
           <div className="mb-8 pb-6 border-b-2 border-indigo-100">
+            <div className="flex justify-end">
+              <ThemeToggle />
+            </div>
             <Link to="/" className="flex items-center hover:opacity-80 transition-opacity group mb-4 ">
                   <img
                     src="/logo.png"
                     alt="LMS Logo"
-                    className="w-16 h-auto object-contain ml-14"
+                    className="w-20 h-auto object-contain ml-14"
                   />
             </Link>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -102,7 +106,7 @@ const InstructorDashboardPage = () => {
           </nav>
         </div>
       </aside>
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+      <main className="min-w-0 flex-1 p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 rounded-2xl">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">

@@ -70,3 +70,98 @@
       #f8fafc;
   }
 }
+
+/* Existing screens use a mixture of semantic tokens and fixed palette utilities.
+   These mappings keep the established component styling while making those
+   utilities theme-aware until each screen can be progressively tokenized. */
+.dark body {
+  background: #09090b;
+}
+
+/* Dark mode deliberately uses solid surfaces: no bright or tinted gradients. */
+.dark [class*="bg-gradient-to"][class*="from-indigo-50"],
+.dark [class*="bg-gradient-to"][class*="from-indigo-100"],
+.dark [class*="bg-[radial-gradient"] {
+  background-image: none !important;
+  background-color: #09090b !important;
+}
+
+.dark [class*="bg-gradient-to"][class*="from-indigo-600"],
+.dark [class*="bg-gradient-to"][class*="from-indigo-700"] {
+  background-image: none !important;
+  background-color: #4f46e5 !important;
+}
+
+/* Some action buttons pair a fixed dark slate background with the semantic
+   primary foreground token. That token is dark in this theme, so enforce a
+   contrasting action treatment instead. */
+.dark button[class*="bg-slate-900"] {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+.dark button[class*="bg-slate-900"]:hover {
+  background-color: #6366f1 !important;
+}
+
+.dark [class*="bg-white"],
+.dark [class*="bg-slate-50"],
+.dark [class*="bg-slate-100"],
+.dark [class*="bg-slate-200"],
+.dark [class*="bg-indigo-50"],
+.dark [class*="bg-indigo-100"] {
+  background-color: hsl(var(--card) / 0.94) !important;
+}
+
+.dark [class*="text-slate-900"],
+.dark [class*="text-slate-800"],
+.dark [class*="text-gray-800"],
+.dark [class*="text-gray-700"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [class*="text-slate-600"],
+.dark [class*="text-slate-500"],
+.dark [class*="text-slate-400"],
+.dark [class*="text-gray-600"],
+.dark [class*="text-gray-500"],
+.dark [class*="text-gray-400"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark [class*="border-slate"],
+.dark [class*="border-gray"],
+.dark [class*="border-indigo-50"],
+.dark [class*="border-indigo-100"],
+.dark [class*="border-indigo-200"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark [class*="from-indigo-50"],
+.dark [class*="via-slate-50"],
+.dark [class*="to-purple-50"],
+.dark [class*="to-slate-100"] {
+  --tw-gradient-from: hsl(var(--background)) var(--tw-gradient-from-position) !important;
+  --tw-gradient-via: hsl(var(--secondary)) var(--tw-gradient-via-position) !important;
+  --tw-gradient-to: hsl(var(--secondary)) var(--tw-gradient-to-position) !important;
+}
+
+/* Keep the current auth tab unmistakable even when a generic background
+   mapping is applied for dark mode. */
+.dark [role="tab"][data-state="active"] {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.dark ::selection {
+  background: #3730a3;
+  color: #eef2ff;
+}
