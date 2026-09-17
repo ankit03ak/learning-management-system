@@ -5,7 +5,7 @@ import RouteGuard from "./components/route-guard";
 import StudentViewCommonLayout from "./components/student-view/common-layout";
 import NotFoundPage from "./pages/not-found page";
 
-import { ClipLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 import StudentHomePage from "./pages/student/home";
 import { ToastContainer } from "react-toastify";
 
@@ -35,7 +35,7 @@ function App() {
     <Suspense
       fallback={
         <div className=" fixed inset-0 spinner-container flex items-center justify-center  ">
-          <ClipLoader color="#36D7B7" size={70} />
+          <HashLoader color="#36D7B7" size={80} />
         </div>
       }
     >

@@ -6,7 +6,7 @@ import { fetchStudentBoughtCoursesService } from "@/services";
 import {Watch } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 
 
 const StudentCoursesPage = () => {
@@ -45,7 +45,7 @@ const StudentCoursesPage = () => {
 
       {loading ? (
         <div className=" fixed inset-0 spinner-container flex items-center justify-center  ">
-          <ClipLoader color="#36D7B7" size={70} />
+          <HashLoader color="#36D7B7" size={80} />
         </div>
       ) : studentBoughtCoursesList && studentBoughtCoursesList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5">

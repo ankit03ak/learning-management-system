@@ -18,39 +18,39 @@ const StudentViewCommonHeader = () => {
 
   return (
     <div>
-      <header className="flex items-center justify-between p-4 lg:px-8 border-b border-indigo-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center space-x-4">
+      <header className="flex items-center justify-between px-4 py-3 lg:px-10 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl sticky top-0 z-50 shadow-[0_4px_24px_rgba(15,23,42,0.06)]">
+      <div className="flex items-center gap-3">
           <Link to="/home" className="flex items-center hover:opacity-80 transition-opacity group">
               <img
                 src="/logo.png"
                 alt="LMS Logo"
-                className="w-18 h-16"
+                className="h-12 w-14 object-contain"
               />
           </Link>
-          <div className="flex items-center space-x-1">
+          <div className="hidden items-center space-x-1 sm:flex">
             <Button
               variant="ghost"
-              className="text-[14px] md:text-[16px] font-medium text-blue-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-300"
+              className="text-sm font-semibold text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all duration-300"
               onClick={() => navigate("/courses")}
             >
               Explore Courses
             </Button>
           </div>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex gap-3 md:gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2 md:gap-3 items-center">
             <div
               className="flex gap-2 md:gap-3 items-center cursor-pointer group hover:opacity-80 transition-all duration-300"
               onClick={() => navigate("/student-courses")}
             >
-              <span className="font-bold md:text-lg text-sm text-blue-500 group-hover:text-indigo-600 transition-colors mr-8 bg-slate-200 hover:bg-slate-300 border-collapse rounded-full px-3 py-1">
+              <span className="font-semibold text-sm text-slate-600 group-hover:text-indigo-700 transition-colors bg-slate-100 hover:bg-indigo-50 rounded-full px-3 py-2">
                 My Courses
               </span>
           
             </div>
             <Button 
               onClick={handleLogOut}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-4 md:px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+              className="bg-slate-900 hover:bg-indigo-700 text-white font-semibold px-4 md:px-5 py-2 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
             >
               Sign Out
             </Button>

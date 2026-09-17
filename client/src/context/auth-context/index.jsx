@@ -1,7 +1,7 @@
 import { initalSignInFormData, initalSignUpFormData } from "@/config";
 import { checkAuthService, loginService, registerService } from "@/services";
 import { createContext, useEffect, useState } from "react";
-import { ClipLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -18,6 +18,7 @@ export default function AuthProvider({ children }) {
   const [signUpFormData, setSignUpFormData] = useState(initalSignUpFormData);
   const [auth, setAuth] = useState({ authenticated: false, user: null });
   const [loading, setLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const handleRegisterUser = async (event) => {
   event.preventDefault();
@@ -38,6 +39,7 @@ export default function AuthProvider({ children }) {
     toast.error("Password must be at least 6 characters");
     return;
   }
+  setLoginLoading(true);
   try {
     const data = await registerService(signUpFormData);
 
@@ -61,25 +63,26 @@ export default function AuthProvider({ children }) {
     console.log("Error in registering user", error);
     toast.error(error?.response?.data?.message || "Registration failed");
   } finally {
+    setLoginLoading(false);
     setSignUpFormData(initalSignUpFormData);
   }
 };
 
   const handleloginUser = async (event) => {
   event.preventDefault();
-  setLoading(true);
+  setLoginLoading(true);
 
   const { userEmail, userPassword } = signInFormData;
 
   if (!userEmail || !userPassword) {
     toast.error("Email and password are required");
-    setLoading(false);
+    setLoginLoading(false);
     return;
   }
 
   if (!isValidEmail(userEmail)) {
     toast.error("Please enter a valid email address");
-    setLoading(false);
+    setLoginLoading(false);
     return;
   }
 
@@ -108,7 +111,7 @@ export default function AuthProvider({ children }) {
     console.log("Error logging in the user", error);
     toast.error(error?.response?.data?.message || "Login failed");
   } finally {
-    setLoading(false);
+    setLoginLoading(false);
     setSignInFormData(initalSignInFormData);
   }
 };
@@ -168,6 +171,21 @@ const resetCredentials = () => {
   setAuth({ authenticated: false, user: null });
 };
 
+const LOADING_MESSAGES = [
+  "Waking up the server...",
+  "This can take up to a 40 seconds on first load",
+  "Almost there, hang tight...",
+];
+
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   return (
     <AuthContext.Provider
@@ -181,12 +199,24 @@ const resetCredentials = () => {
         auth,
         resetCredentials,
         loading,
+        loginLoading,
       }}
     >
       {loading ? (
-        <div className=" fixed inset-0 spinner-container flex flex-col items-center justify-center  ">
-          <ClipLoader color="#36D7B7" size={70} />
-        </div>
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-white gap-6 px-6">
+      <img src="/logo.png" alt="LearnSphere" className="h-24 w-auto" />
+
+      <HashLoader color="#36D7B7" size={80} />
+
+      <div className="text-center max-w-sm">
+        <p className="text-gray-700 font-medium transition-opacity duration-500">
+          {LOADING_MESSAGES[messageIndex]}
+        </p>
+        <p className="text-gray-400 text-sm mt-2">
+          First load may take a little longer — subsequent visits will be instant.
+        </p>
+      </div>
+    </div>
       ) : (
         children
       )}

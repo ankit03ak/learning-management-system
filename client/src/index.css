@@ -62,6 +62,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    min-width: 320px;
+    background:
+      radial-gradient(circle at 0% 0%, rgb(224 231 255 / 0.7), transparent 32rem),
+      radial-gradient(circle at 100% 0%, rgb(243 232 255 / 0.55), transparent 30rem),
+      #f8fafc;
   }
 }

@@ -9,9 +9,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signInFormControls, signUpFormControls } from "@/config";
 import { AuthContext } from "@/context/auth-context/index";
-import { GraduationCap } from "lucide-react";
-import React, { useState } from "react";
-import { useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -31,6 +29,7 @@ const AuthPage = () => {
     setSignUpFormData,
     handleRegisterUser,
     handleloginUser,
+    loginLoading,
   } = useContext(AuthContext);
 
   const handleTabChange = (value) => {
@@ -55,93 +54,115 @@ const AuthPage = () => {
     );
   };
 
-
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
-      <header className="px-4 lg:px-6 h-20 flex items-center border-b border-indigo-100 bg-white/80 backdrop-blur-sm z-50 flex-shrink-0">
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-50 selection:bg-indigo-100 selection:text-indigo-700">
+      {/* Light Header */}
+      <header className="px-6 lg:px-12 h-20 flex items-center border-b border-slate-200/80 bg-white/70 backdrop-blur-md sticky top-0 z-50 flex-shrink-0">
         <div
           onClick={handleNavigate}
-          className="flex items-center justify-center cursor-pointer group "
+          className="flex items-center justify-center cursor-pointer group"
         >
           <img
-                src="/logo.png"
-                alt="LMS Logo"
-                className="w-18 h-16"
-              />
+            src="/logo.png"
+            alt="LMS Logo"
+            className="h-18 w-16 object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         </div>
       </header>
-      <div className="flex items-center justify-center flex-1 p-4 overflow-auto">
-        <Tabs
-          value={activeTab}
-          defaultValue="signin"
-          onValueChange={handleTabChange}
-          className="w-full max-w-md"
-        >
-          <TabsList className="grid w-full grid-cols-2 p-1.5 bg-white rounded-2xl shadow-lg mb-6 border border-indigo-100 h-auto">
-            <TabsTrigger 
+
+      {/* Main Container with Soft Radial Light Background */}
+      <div className="flex min-h-0 flex-1 items-start justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/60 via-slate-50 to-slate-100 px-3 pt-4 sm:px-6 sm:pt-6">
+        <div className="my-0 w-full max-w-md -translate-y-1 space-y-4 sm:-translate-y-2 sm:space-y-5">
+          <div className="text-center space-y-1.5">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+              LMS Learn
+            </h1>
+            <p className="text-sm text-slate-500 font-medium">
+              Access your learning journey
+            </p>
+          </div>
+
+          <Tabs
+            value={activeTab}
+            defaultValue="signin"
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            {/* Styled Light Pill Tabs */}
+            <TabsList className="mb-4 grid h-11 w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-200/60 p-1">
+              <TabsTrigger
+                value="signin"
+                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
+              >
+                Sign Up
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent
               value="signin"
-              className="rounded-xl py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md font-semibold transition-all duration-300"
+              className="transition-all duration-300 ease-in-out focus-visible:outline-none"
             >
-              Sign In
-            </TabsTrigger>
-            <TabsTrigger 
+              <Card className="space-y-6 rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/50 backdrop-blur-sm sm:p-8">
+                <CardHeader className="space-y-3 p-0">
+                  <CardTitle className="text-2xl font-bold text-slate-900">
+                    Welcome back
+                  </CardTitle>
+                  <CardDescription className="text-slate-500 text-sm">
+                    Enter your email and password to access your account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 p-0">
+                  <CommonForm
+                    formControls={signInFormControls}
+                    buttonText={loginLoading ? "Signing in..." : "Sign In"}
+                    formData={signInFormData}
+                    setFormData={setSignInFormData}
+                    isButtonDisabled={loginLoading || !checkIfSignInFormValid()}
+                    handleSubmit={handleloginUser}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent
               value="signup"
-              className="rounded-xl py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md font-semibold transition-all duration-300"
+              className="transition-all duration-300 ease-in-out focus-visible:outline-none"
             >
-              Sign Up
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent
-            value="signin"
-            className="transition-all duration-300 ease-in-out"
-          >
-            <Card className="p-8 space-y-4 bg-white rounded-2xl shadow-xl border border-indigo-100">
-              <CardHeader className="space-y-2 p-0 pb-6">
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Welcome back
-                </CardTitle>
-                <CardDescription className="text-gray-600 text-base">
-                  Enter your email and password to access your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 p-0">
-                <CommonForm
-                  formControls={signInFormControls}
-                  buttonText={"Sign In"}
-                  formData={signInFormData}
-                  setFormData={setSignInFormData}
-                  isButtonDisabled={!checkIfSignInFormValid()}
-                  handleSubmit={handleloginUser}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent
-            value="signup"
-            className="transition-all duration-300 ease-in-out"
-          >
-            <Card className="p-8 space-y-4 bg-white rounded-2xl shadow-xl border border-indigo-100">
-              <CardHeader className="space-y-2 p-0 pb-6">
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Create account
-                </CardTitle>
-                <CardDescription className="text-gray-600 text-base">
-                  Enter your details to get started with LMS Learn
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 p-0">
-                <CommonForm
-                  formControls={signUpFormControls}
-                  buttonText={"Sign Up"}
-                  formData={signUpFormData}
-                  setFormData={setSignUpFormData}
-                  isButtonDisabled={!checkIfSignUpFormValid()}
-                  handleSubmit={handleRegisterUser}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <Card className="space-y-4 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xl shadow-slate-200/50 backdrop-blur-sm sm:p-7">
+                <CardHeader className="space-y-1.5 p-0">
+                  <CardTitle className="text-2xl font-bold text-slate-900">
+                    Create account
+                  </CardTitle>
+                  <CardDescription className="text-slate-500 text-sm">
+                    Enter your details to get started with LMS Learn
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 p-0">
+                  <CommonForm
+                    formControls={signUpFormControls}
+                    buttonText={loginLoading ? "Creating account..." : "Sign Up"}
+                    formData={signUpFormData}
+                    setFormData={setSignUpFormData}
+                    isButtonDisabled={loginLoading || !checkIfSignUpFormValid()}
+                    handleSubmit={handleRegisterUser}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          <div className="text-center">
+            <p className="text-xs text-slate-400 font-medium">
+              © {new Date().getFullYear()} LMS Learn. All rights reserved.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
