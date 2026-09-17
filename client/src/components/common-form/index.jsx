@@ -17,7 +17,7 @@ const CommonForm = ({
         formData={formData}
         setFormData={setFormData}
       />
-      <Button disabled={isButtonDisabled} type="submit" className="mt-5 w-full">
+      <Button disabled={isButtonDisabled} type="submit" className="mt-5 w-full hover:scale-[1.02] transition-transform duration-200">
         {buttonText || "Submit"}
       </Button>
     </form>
