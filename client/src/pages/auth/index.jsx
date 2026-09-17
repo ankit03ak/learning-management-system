@@ -12,6 +12,7 @@ import { AuthContext } from "@/context/auth-context/index";
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
+import ThemeToggle from "@/components/theme-toggle";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -55,9 +56,8 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50 selection:bg-indigo-100 selection:text-indigo-700">
-      {/* Light Header */}
-      <header className="px-6 lg:px-12 h-20 flex items-center border-b border-slate-200/80 bg-white/70 backdrop-blur-md sticky top-0 z-50 flex-shrink-0">
+    <div className="flex min-h-screen flex-col bg-slate-50 selection:bg-indigo-100 selection:text-indigo-700">
+      <header className="fixed inset-x-0 top-0 z-50 h-20 flex items-center justify-between border-b border-slate-200/80 bg-white/95 px-6 lg:px-12 backdrop-blur-md">
         <div
           onClick={handleNavigate}
           className="flex items-center justify-center cursor-pointer group"
@@ -68,10 +68,11 @@ const AuthPage = () => {
             className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </div>
+        <ThemeToggle />
       </header>
 
       {/* Main Container with Soft Radial Light Background */}
-      <div className="flex min-h-0 flex-1 items-start justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/60 via-slate-50 to-slate-100 px-3 pt-4 sm:px-6 sm:pt-6">
+      <div className="mt-20 flex min-h-0 flex-1 items-start justify-center overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/60 via-slate-50 to-slate-100 px-3 pt-4 sm:px-6 sm:pt-6">
         <div className="my-0 w-full max-w-md -translate-y-1 space-y-4 sm:-translate-y-2 sm:space-y-5">
           <div className="text-center space-y-1.5">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
@@ -92,13 +93,13 @@ const AuthPage = () => {
             <TabsList className="mb-4 grid h-11 w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-200/60 p-1">
               <TabsTrigger
                 value="signin"
-                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
+                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
               >
                 Sign In
               </TabsTrigger>
               <TabsTrigger
                 value="signup"
-                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
+                className="h-full rounded-lg px-4 text-sm font-semibold text-slate-600 transition-all duration-200 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md"
               >
                 Sign Up
               </TabsTrigger>
