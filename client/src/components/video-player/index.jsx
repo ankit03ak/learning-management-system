@@ -131,6 +131,7 @@ const VideoPlayer = ({ width = "100%", height = "100%", url, useProgressUpdate, 
     ${isFullScreen ? `w-screen h-screen` : ``}`}
       style={{ width, height }}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleMouseMove}
       onMouseLeave={() => setShowControls(false)} //This vanishes the controls in case pointer is moved out of the video  box 
     >
       <ReactPlayer
