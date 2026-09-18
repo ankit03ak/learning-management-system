@@ -63,10 +63,41 @@ const InstructorDashboardPage = () => {
     sessionStorage.clear();
   };
 
+  const handleMenuAction = (value) => {
+    if (value === "logout") {
+      handleLogOut();
+      return;
+    }
+
+    setActiveTab(value);
+  };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <aside className="sticky top-0 h-screen w-64 flex-shrink-0 self-start bg-white shadow-xl hidden md:block border-r-2 border-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-1 border-b border-indigo-100 bg-white/95 px-2 shadow-sm backdrop-blur md:hidden">
+        <nav aria-label="Instructor navigation" className="flex min-w-0 flex-1 items-center gap-1">
+          {menuItems.map((menuItem) => (
+            <Button
+              key={menuItem.value}
+              type="button"
+              variant="ghost"
+              onClick={() => handleMenuAction(menuItem.value)}
+              className={`h-10 min-w-0 flex-1 gap-1 rounded-lg px-2 text-xs font-semibold sm:text-sm ${
+                activeTab === menuItem.value
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                  : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+              }`}
+            >
+              <menuItem.icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{menuItem.label}</span>
+            </Button>
+          ))}
+        </nav>
+        <ThemeToggle className="h-10 w-10 shrink-0" />
+      </header>
+
+      <div className="flex min-h-screen pt-16 md:pt-0">
+        <aside className="sticky top-0 h-screen w-64 flex-shrink-0 self-start bg-white shadow-xl hidden md:block border-r-2 border-indigo-100">
         <div className="p-6">
           <div className="mb-8 pb-6 border-b-2 border-indigo-100">
             <div className="flex justify-end">
@@ -92,11 +123,7 @@ const InstructorDashboardPage = () => {
                     : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
                 }`}
                 key={menuItem.value}
-                onClick={
-                  menuItem.value === "logout"
-                    ? handleLogOut
-                    : () => setActiveTab(menuItem.value)
-                }
+                onClick={() => handleMenuAction(menuItem.value)}
                 variant={activeTab === menuItem.value ? "secondary" : "ghost"}
               >
                 <menuItem.icon className="mr-3 h-5 w-5" />
@@ -105,12 +132,12 @@ const InstructorDashboardPage = () => {
             ))}
           </nav>
         </div>
-      </aside>
-      <main className="min-w-0 flex-1 p-6 lg:p-8">
+        </aside>
+        <main className="min-w-0 flex-1 p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 rounded-2xl">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Dashboard
+              {activeTab === "courses" ? "Courses" : "Dashboard"}
             </h1>
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -121,7 +148,8 @@ const InstructorDashboardPage = () => {
             ))}
           </Tabs>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
