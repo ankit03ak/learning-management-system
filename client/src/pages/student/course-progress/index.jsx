@@ -17,7 +17,7 @@ import {
   markLectureAsViewedService,
   resetCourseProgressService,
 } from "@/services";
-import { Check, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,7 +36,12 @@ const StudentCourseProgress = () => {
   const [showCourseCompleteDialog, setShowCourseCompleteDialog] =
     useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeCourseTab, setActiveCourseTab] = useState("content");
+  // On small screens the course panel is an on-demand drawer, leaving the
+  // limited viewport width available for the video player.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    window.matchMedia("(min-width: 768px)").matches
+  );
 
   const handleRewatchCourse = async () => {
     
@@ -223,7 +228,7 @@ const StudentCourseProgress = () => {
         <div className="flex items-center space-x-4">
           <Button
             onClick={() => navigate("/student-courses")}
-            className="text-black bg-white"
+            className="bg-card text-card-foreground hover:bg-accent"
             variant="ghost"
             size="sm"
           >
@@ -237,6 +242,8 @@ const StudentCourseProgress = () => {
         <Button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="z-50"
+          aria-label={isSidebarOpen ? "Close course panel" : "Open course panel"}
+          title={isSidebarOpen ? "Close course panel" : "Open course panel"}
         >
           {isSidebarOpen ? (
             <ChevronRight className="h-5 w-5" />
@@ -247,13 +254,13 @@ const StudentCourseProgress = () => {
       </div>
       <div className="flex flex-1 overflow-hidden">
         <div
-          className={`flex-1 ${
-            isSidebarOpen ? "mr-[400px]" : ""
+          className={`min-w-0 flex-1 ${
+            isSidebarOpen ? "md:mr-[400px]" : ""
           } transition-all duration-300`}
         >
           <VideoPlayer
             width="100%"
-            height="500px"
+            height="clamp(220px, 56.25vw, 500px)"
             url={currentLecture?.videoUrl}
             useProgressUpdate={true}
             onProgressUpdate={setCurrentLecture}
@@ -263,27 +270,53 @@ const StudentCourseProgress = () => {
             <h2 className="text-3xl font-bold mb-3">{currentLecture?.title}</h2>
           </div>
         </div>
+        {isSidebarOpen && (
+          <button
+            type="button"
+            className="fixed inset-0 z-30 bg-black/50 md:hidden"
+            aria-label="Close course panel"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
         <div
-          className={`fixed top-[68px] right-0 bottom-0 w-[400px] bg-[#1c1d1f] border-l border-r-gray-700 transition-all duration-300 ${
+          role="dialog"
+          aria-modal="true"
+          aria-label="Course panel"
+          className={`fixed top-[68px] right-0 bottom-0 z-40 w-full sm:w-[400px] bg-[#1c1d1f] border-l border-r-gray-700 transition-all duration-300 ${
             isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <Tabs defaultValue="content" className="h-full flex-col">
-            <TabsList className="grid bg-white w-full grid-cols-2 p-0 h-14">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(false)}
+            className="absolute right-2 top-2 z-10 h-9 w-9 text-white hover:bg-white/10 hover:text-white"
+            aria-label="Close course panel"
+            title="Close course panel"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          <Tabs
+            value={activeCourseTab}
+            onValueChange={setActiveCourseTab}
+            className="flex h-full flex-col"
+          >
+            <TabsList className="grid h-14 w-full grid-cols-2 rounded-none bg-card p-0 pr-12">
               <TabsTrigger
                 value="content"
-                className=" text-black bg-white rounded-none h-full"
+                className="h-full rounded-none bg-card text-card-foreground data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
               >
                 Course Content
               </TabsTrigger>
               <TabsTrigger
                 value="overview"
-                className=" text-black bg-white rounded-none h-full"
+                className="h-full rounded-none bg-card text-card-foreground data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
               >
                 Overview
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="content">
+            <TabsContent value="content" className="mt-0 min-h-0 flex-1 overflow-hidden data-[state=active]:flex">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
                   {studentCurrentCourseProgress?.courseDetails?.curriculum?.map(
@@ -311,7 +344,7 @@ const StudentCourseProgress = () => {
                 </div>
               </ScrollArea>
             </TabsContent>
-            <TabsContent value="overview" className="flex-1 overflow-hidden">
+            <TabsContent value="overview" className="mt-0 min-h-0 flex-1 overflow-hidden data-[state=active]:flex">
               <ScrollArea className="h-full">
                 <div className="p-4">
                   <h2 className="text-xl font-bold mb-4">About this course</h2>

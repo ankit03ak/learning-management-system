@@ -6,7 +6,7 @@ const StudentViewCommonLayout = () => {
   const location = useLocation();
 
   return (
-    <div>
+    <div className={!location.pathname.includes("course-progress") ? "pt-[92px]" : ""}>
       {!location.pathname.includes("course-progress") ? (
         <StudentViewCommonHeader />
        ) : null}
